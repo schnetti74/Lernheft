@@ -114,6 +114,13 @@ label.lab{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
 .nav button{flex:1;font:inherit;font-weight:700;font-size:15px;min-height:50px;border:0;border-radius:12px;background:transparent;color:var(--muted);cursor:pointer}
 .nav button[aria-current="page"]{background:var(--mark);color:var(--mark-ink)}
 .err{color:var(--bad);font-weight:700;font-size:15px}
+.chks{display:flex;flex-direction:column;gap:8px}
+.chk{display:flex;gap:12px;align-items:center;min-height:48px;padding:6px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-weight:600;cursor:pointer}
+.chk input{width:22px;height:22px;accent-color:var(--accent);flex:none;margin:0}
+.exc{border:2px solid var(--accent)}
+.exc.urgent{background:var(--tipbg)}
+.exrow{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.exrow:last-child{border-bottom:0}
 @media (max-width:380px){.tiles{grid-template-columns:1fr}.big{font-size:28px}}
 @media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s}}
 </style>
@@ -350,8 +357,80 @@ function genWink(l){
   return {q:'Zwei parallele Geraden werden von einer dritten Geraden geschnitten. α = '+al+'°. β ist '+r1[0]+' zu α. γ ist '+r2[0]+' zu β. Wie groß ist γ?',unit:'°',pre:'',kind:'num',ans:g,tips:[t1,t2],sol:t2};
 }
 
+function genRv(l){
+  function A(){
+    const s=pick([20,50,100,100,200]);
+    const b=ri(Math.ceil(s*0.15),Math.floor(s*0.85)),c=s-b,a=ri(3,90)*sign();
+    const t1='Kommutativ- und Assoziativgesetz: Suche zwei Zahlen, die zusammen etwas Rundes ergeben, und rechne sie zuerst.';
+    const t2=b+' + '+c+' = '+s+'. Rechne dann '+fmt(a)+' + '+s+'.';
+    return {q:'Berechne vorteilhaft: '+linStr(shuffle([[a,0],[b,0],[c,0]])),unit:'',pre:'',kind:'num',ans:a+s,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(a+s)};
+  }
+  function B(){
+    const pr=pick([[25,4],[5,20],[50,2],[125,8],[25,8]]);
+    const a=ri(2,19)*sign(),b=pr[0],c=pr[1]*sign(),pp=b*c;
+    const t1='Assoziativgesetz: Multipliziere zuerst die beiden Zahlen, die zusammen etwas Rundes ergeben.';
+    const t2=b+' · '+br(c)+' = '+fmt(pp)+'. Rechne dann '+fmt(a)+' · '+br(pp)+'.';
+    return {q:'Berechne vorteilhaft: '+fmt(a)+' · '+b+' · '+br(c),unit:'',pre:'',kind:'num',ans:a*pp,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(a*pp)};
+  }
+  function C(){
+    const base=pick([100,100,50,200]),d=ri(1,4),sg=sign(),a=ri(3,29)*sign();
+    const ans=a*(base+sg*d);
+    const t1='Distributivgesetz: Multipliziere jeden Summanden in der Klammer einzeln mit '+fmt(a)+'.';
+    const t2=fmt(a)+' · '+base+' = '+fmt(a*base)+' und '+fmt(a)+' · '+br(sg*d)+' = '+fmt(a*sg*d)+'. Rechne beides zusammen.';
+    return {q:'Berechne vorteilhaft: '+fmt(a)+' · ('+base+' '+(sg<0?MINUS:'+')+' '+d+')',unit:'',pre:'',kind:'num',ans:ans,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(ans)};
+  }
+  function D(){
+    const pr=pick([[3,7],[4,6],[2,8],[35,65],[15,85],[12,88],[45,55]]);
+    const a=ri(11,199)*sign(),sum=pr[0]+pr[1];
+    const t1='Distributivgesetz rückwärts (Ausklammern): Der Faktor '+fmt(a)+' steht in beiden Produkten. Schreibe ihn vor eine Klammer.';
+    const t2=fmt(a)+' · ('+pr[0]+' + '+pr[1]+') = '+fmt(a)+' · '+sum+'.';
+    return {q:'Berechne vorteilhaft: '+fmt(a)+' · '+pr[0]+' + '+br(a)+' · '+pr[1],unit:'',pre:'',kind:'num',ans:a*sum,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(a*sum)};
+  }
+  function E(){
+    const a=ri(-9,9)||4,b=ri(-9,9)||3,c=ri(-9,9)||2,ans=a-(b+c);
+    const t1='Minusklammerregel: Steht vor der Klammer ein Minus, drehst du alle Vorzeichen in der Klammer um.';
+    const t2='Ohne Klammer: '+fmt(a)+' '+tm(-b)+' '+tm(-c)+'.';
+    return {q:'Berechne: '+fmt(a)+' '+MINUS+' ('+fmt(b)+' '+tm(c)+')',unit:'',pre:'',kind:'num',ans:ans,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(ans)};
+  }
+  function F(){
+    let a,b,d,k=0;
+    do{d=ri(2,9)*sign();a=Math.abs(d)*ri(2,9);b=Math.abs(d)*ri(2,9)*sign();k++;}while(a+b===0&&k<20);
+    const ans=(a+b)/d;
+    const t1='Distributivgesetz bei der Division: Teile jeden Summanden einzeln durch '+fmt(d)+'.';
+    const t2=fmt(a)+' : '+br(d)+' = '+fmt(a/d)+' und '+fmt(b)+' : '+br(d)+' = '+fmt(b/d)+'. Rechne beides zusammen.';
+    return {q:'Berechne vorteilhaft: ('+fmt(a)+' '+tm(b)+') : '+br(d),unit:'',pre:'',kind:'num',ans:ans,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(ans)};
+  }
+  function G(){
+    const a=ri(11,99)/10,b=ri(11,99)/10,c=ri(11,99)/10,plus=Math.random()<.5;
+    const ans=round2(a-(plus?b+c:b-c));
+    const t1='Minusklammerregel: Hinter dem Minus drehen sich alle Vorzeichen in der Klammer um.';
+    const t2='Ohne Klammer: '+fmt(a)+' '+MINUS+' '+fmt(b)+' '+(plus?MINUS:'+')+' '+fmt(c)+'.';
+    return {q:'Berechne vorteilhaft: '+fmt(a)+' '+MINUS+' ('+fmt(b)+' '+(plus?'+':MINUS)+' '+fmt(c)+')',unit:'',pre:'',kind:'num',ans:ans,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(ans)};
+  }
+  function H(){
+    const t=pick(['pot','klam','pkt']);
+    if(t==='pot'){
+      const a=ri(2,6),b=-ri(2,6),ans=a*b*b;
+      return {q:'Berechne: '+a+' · ('+fmt(b)+')²',unit:'',pre:'',kind:'num',ans:ans,tips:['Rechenregeln: Erst die Potenz, dann Punkt vor Strich.','('+fmt(b)+')² = '+(b*b)+'. Dann '+a+' · '+(b*b)+'.'],sol:'('+fmt(b)+')² = '+(b*b)+'. Dann '+a+' · '+(b*b)+'. Ergebnis: '+fmt(ans)};
+    }
+    if(t==='klam'){
+      let a,b,c,k=0;
+      do{a=ri(2,20)*sign();b=ri(-15,15)||6;c=ri(-15,15)||4;k++;}while(b+c===0&&k<20);
+      const ans=a*(b+c),t2=fmt(b)+' '+tm(c)+' = '+fmt(b+c)+'. Dann '+fmt(a)+' · '+br(b+c)+'.';
+      return {q:'Berechne: '+fmt(a)+' · ('+fmt(b)+' '+tm(c)+')',unit:'',pre:'',kind:'num',ans:ans,tips:['Rechenregeln: Klammern werden zuerst berechnet.',t2],sol:t2+' Ergebnis: '+fmt(ans)};
+    }
+    const a=ri(5,30)*sign(),b=ri(2,9)*sign(),c=ri(2,9)*sign(),ab=Math.abs(b),m=ab*c,ans=a+b*c;
+    const t2=ab+' · '+br(c)+' = '+fmt(m)+'. Dann '+fmt(a)+' '+(b<0?MINUS:'+')+' '+br(m)+'.';
+    return {q:'Berechne: '+fmt(a)+' '+tm(b)+' · '+br(c),unit:'',pre:'',kind:'num',ans:ans,tips:['Rechenregeln: Punkt vor Strich. Rechne zuerst die Malaufgabe.',t2],sol:t2+' Ergebnis: '+fmt(ans)};
+  }
+  if(l===1)return pick([A,B])();
+  if(l===2)return pick([C,D,E])();
+  return pick([F,G,H])();
+}
+
 const TOPICS=[
   {id:'neg',name:'Negative Zahlen',sub:'Plus, Minus, Mal, Geteilt',gen:genNeg},
+  {id:'rv',name:'Rechenvorteile',sub:'Klammern, Ausklammern, Tricks',gen:genRv},
   {id:'proz',name:'Prozentrechnung',sub:'Prozentwert, Rabatt, Steuer',gen:genProz},
   {id:'gl',name:'Gleichungen',sub:'Finde das x',gen:genGl},
   {id:'term',name:'Terme',sub:'Zusammenfassen, Klammern',gen:genTerm},
@@ -451,6 +530,22 @@ function parseLines(text){
   });
   return {cards:cards,skipped:skipped};
 }
+function daysUntil(ds,now){
+  const p=String(ds).split('-').map(Number);
+  const t=new Date(p[0],p[1]-1,p[2]).getTime();
+  const n=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  return Math.round((t-n)/86400000);
+}
+const WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
+function dateLong(ds){const p=String(ds).split('-').map(Number);const d=new Date(p[0],p[1]-1,p[2]);return WD[d.getDay()]+', '+p[2]+'.'+p[1]+'.'+p[0];}
+function quotaToday(startRemaining,daysLeft){
+  if(daysLeft<0)return {phase:'over',quota:0};
+  if(daysLeft===0)return {phase:'today',quota:0};
+  const phase=daysLeft<=2?'repeat':'build';
+  if(startRemaining<=0)return {phase:phase,quota:phase==='repeat'?8:0};
+  const q=Math.ceil(startRemaining/Math.max(1,daysLeft-1));
+  return {phase:phase,quota:Math.max(5,Math.min(60,q))};
+}
 // ==LOGIC-END==
 
 (function(){
@@ -470,7 +565,7 @@ function makeSet(name,lang,lines,builtin){
   return {id:uid(),name:name,lang:lang,builtin:!!builtin,cards:parseLines(lines.join('\n')).cards.map(function(c){return {id:uid(),fx:c.fx,de:c.de,box:1,due:0};})};
 }
 function defaultState(){
-  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[makeSet('Englisch, Beispielwörter','en',EN_SAMPLE,true),makeSet('Französisch, Beispielwörter','fr',FR_SAMPLE,true)],math:{}};
+  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[makeSet('Englisch, Beispielwörter','en',EN_SAMPLE,true),makeSet('Französisch, Beispielwörter','fr',FR_SAMPLE,true)],math:{},exams:[]};
 }
 function load(){
   try{
@@ -499,6 +594,25 @@ function streak(){
 const levelInfo=function(){return {lvl:Math.floor(state.points/150)+1,into:state.points%150};};
 const mstat=function(id){if(!state.math[id])state.math[id]={level:1,clean:0,fail:0};return state.math[id];};
 const getSet=function(id){return state.sets.find(function(s){return s.id===id;});};
+const getExam=id=>state.exams.find(e=>e.id===id);
+const examDays=e=>daysUntil(e.date,new Date());
+const examDoneToday=e=>(e.prog&&e.prog[dkey()])||0;
+const examDoneTotal=e=>Object.keys(e.prog||{}).reduce((a,k)=>a+Math.min(15,e.prog[k]),0);
+const subjLabel=sj=>sj==='math'?'Mathe':sj==='fr'?'Französisch':'Englisch';
+function examCardsOf(e){const out=[];(e.sets||[]).forEach(sid=>{const st=getSet(sid);if(st)st.cards.forEach(c=>out.push({s:st,c:c}));});return out;}
+function examTopics(e){return (e.topics||[]).filter(id=>TOPICS.some(t=>t.id===id));}
+function examRemaining(e){
+  if(e.subj==='math')return Math.max(0,examTopics(e).length*20-examDoneTotal(e));
+  return examCardsOf(e).reduce((a,x)=>a+Math.max(0,4-x.c.box),0);
+}
+function addExamProg(id){const e=getExam(id);if(!e)return;e.prog=e.prog||{};const k=dkey();e.prog[k]=(e.prog[k]||0)+1;}
+function examPlan(e){const d=examDays(e),done=examDoneToday(e);return {d:d,done:done,pl:quotaToday(examRemaining(e)+done,d)};}
+function pickTopic(ids){
+  const w=ids.map(id=>{const st=mstat(id);return 1+(3-st.level)+st.fail;});
+  let r=Math.random()*w.reduce((a,b)=>a+b,0);
+  for(let i=0;i<ids.length;i++){r-=w[i];if(r<=0)return ids[i];}
+  return ids[ids.length-1];
+}
 const dueCount=function(set){const n=Date.now();return set.cards.filter(function(c){return c.due<=n;}).length;};
 const langName=function(l){return l==='fr'?'Französisch':'Englisch';};
 
@@ -536,11 +650,12 @@ function home(){
       '<div class="stack" style="gap:8px;min-width:0;flex:1"><div><h3>'+(c>=g?'Tagesziel geschafft':'Heute '+c+' von '+g+' richtig')+'</h3><p class="muted small">'+(st>0?st+(st===1?' Tag':' Tage')+' in Folge geschafft':'Schaffe '+g+' richtige Antworten und starte eine Serie.')+'</p></div>'+
       '<div><div class="bar" role="img" aria-label="Level '+li.lvl+', '+li.into+' von 150 Punkten"><i style="width:'+(li.into/150*100)+'%"></i></div><p class="muted small" style="margin-top:4px">Level '+li.lvl+', noch '+(150-li.into)+' Punkte bis Level '+(li.lvl+1)+'</p></div></div>'+
     '</div>'+
+    examBlock()+
     '<div class="tiles">'+
       '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(due?due+' Karten warten auf dich':'Heute ist alles wiederholt')+'</span></button>'+
-      '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">6 Themen, mit Tipps</span></button>'+
+      '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">'+TOPICS.length+' Themen, mit Tipps</span></button>'+
     '</div>'+
-    '<div><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
+    '<div class="row" style="gap:20px"><button class="link" data-a="go" data-v="exams">Arbeit eintragen</button><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
   '</div>';
 }
 
@@ -607,7 +722,7 @@ function vocabResult(){
   return topBar()+'<div class="stack"><h1>Geschafft</h1>'+
     '<div class="card stack"><div class="big">'+vs.correct+' von '+vs.total+'</div><p>beim ersten Versuch gewusst. Du hast <b>'+vs.pts+' Punkte</b> geholt.</p></div>'+
     (vs.missed.length?'<div><p class="eyebrow" style="margin-bottom:6px">Das schaust du dir nochmal an</p><div class="words" style="max-height:none">'+vs.missed.map(function(m){return '<div><span>'+esc(m.fx)+'</span><span class="muted">'+esc(m.de)+'</span></div>';}).join('')+'</div></div>':'<div class="fb good">Keine einzige Karte falsch.</div>')+
-    '<button class="btn block" data-a="go" data-v="vocab">Zu den Listen</button></div>';
+    '<button class="btn block" data-a="go" data-v="'+(vs.examId?'home':'vocab')+'">'+(vs.examId?'Zur\u00FCck zum Start':'Zu den Listen')+'</button></div>';
 }
 
 function mathList(){
@@ -621,7 +736,7 @@ function mathSession(){
   const tName=(TOPICS.find(function(t){return t.id===it.topicId;})||{}).name;
   const showKeys=it.kind==='lin'||(typeof it.ans==='number'&&it.ans<0)||it.pre==='x =';
   const keys=it.kind==='lin'?[MINUS,'+','x',',']:[MINUS,','];
-  let out='<div class="stack" style="gap:16px"><div class="row between"><button class="link" data-a="mend">✕ Beenden</button><span class="muted small">'+m.solved+' gelöst · '+m.pts+' Punkte</span></div>'+
+  let out='<div class="stack" style="gap:16px"><div class="row between"><button class="link" data-a="mend">✕ Beenden</button><span class="muted small">'+m.solved+' gelöst · '+m.pts+' Punkte</span></div>'+examLine(m.examId)+
     '<div class="card paper stack"><div class="row"><span class="badge">'+esc(tName)+'</span><span class="badge">Stufe '+it.level+'</span></div><div class="q"><span>'+esc(it.q)+'</span></div></div>';
   for(let i=0;i<m.tips;i++)out+='<div class="tip"><b>Tipp '+(i+1)+'.</b> '+esc(it.tips[i])+'</div>';
   if(m.phase==='done'){
@@ -649,6 +764,68 @@ function settings(){
   '</div>';
 }
 
+function examLine(id){
+  const e=id&&getExam(id);if(!e)return '';
+  const p=examPlan(e);
+  return '<div class="fb info small">Für die Arbeit heute: '+Math.min(p.done,p.pl.quota)+' von '+p.pl.quota+' Aufgaben</div>';
+}
+function examBlock(){
+  const list=state.exams.map(e=>({e:e,d:examDays(e)})).filter(x=>x.d>=0).sort((a,b)=>a.d-b.d);
+  if(!list.length)return '<div class="card row between" style="gap:12px"><p class="muted small" style="flex:1;min-width:200px">Steht eine Arbeit an? Trage den Termin ein, dann plant die App die Tage bis dahin.</p><button class="btn ghost small" data-a="go" data-v="exams">Arbeit eintragen</button></div>';
+  return list.map(x=>{
+    const e=x.e,p=examPlan(e),pl=p.pl,unit=e.subj==='math'?'Aufgaben':'Karten';
+    const when=p.d===0?'Heute':p.d===1?'Morgen':'In '+p.d+' Tagen';
+    let info;
+    if(pl.phase==='today')info='Heute ist die Arbeit. Schau höchstens kurz auf deine Fehler, dann Pause. Viel Erfolg!';
+    else if(pl.phase==='repeat')info='Endspurt: Wiederhole jetzt vor allem, was noch wackelt.';
+    else if(pl.quota===0)info='Der Stoff sitzt schon gut. Ein kurzer Durchgang hält ihn frisch.';
+    else info='Aufbau: Schwache Sachen kommen zuerst dran.';
+    const what=e.subj==='math'?examTopics(e).map(id=>TOPICS.find(t=>t.id===id).name).join(', '):(e.sets||[]).map(id=>{const st=getSet(id);return st?st.name:'';}).filter(Boolean).join(', ');
+    let prog='';
+    if(pl.quota>0){
+      const dn=Math.min(p.done,pl.quota);
+      prog='<div class="bar" role="progressbar" aria-valuenow="'+dn+'" aria-valuemin="0" aria-valuemax="'+pl.quota+'"><i style="width:'+(dn/pl.quota*100)+'%"></i></div><p class="small muted">'+(p.done>=pl.quota?'Tagesziel für die Arbeit geschafft.':'Heute '+dn+' von '+pl.quota+' '+unit+' richtig')+'</p>';
+    }
+    return '<div class="card exc'+(p.d<=2?' urgent':'')+' stack" style="gap:10px"><div class="row between"><h3>'+subjLabel(e.subj)+', '+dateLong(e.date)+'</h3><span class="badge">'+when+'</span></div><p class="small muted">'+esc(what)+'</p><p>'+info+'</p>'+prog+'<button class="btn block" data-a="examgo" data-e="'+e.id+'">'+(pl.phase==='today'?'Kurz wiederholen':'Für die Arbeit üben')+'</button></div>';
+  }).join('');
+}
+function newEx(sj){
+  return {subj:sj,date:'',sets:sj==='math'?[]:state.sets.filter(st=>st.lang===sj).map(st=>st.id),topics:sj==='math'?['rv','neg']:[],err:''};
+}
+function readEx(){
+  const x=ui.ex;if(!x)return;
+  const dt=$('exdate');if(dt)x.date=dt.value;
+  x.sets=Array.prototype.map.call(document.querySelectorAll('.exset:checked'),i=>i.value);
+  x.topics=Array.prototype.map.call(document.querySelectorAll('.extop:checked'),i=>i.value);
+}
+function examsView(){
+  if(!ui.ex)ui.ex=newEx('math');
+  const x=ui.ex;
+  const all=state.exams.slice().sort((a,b)=>a.date<b.date?-1:1);
+  let rows='';
+  if(all.length){
+    rows='<div><p class="eyebrow" style="margin-bottom:6px">Eingetragen</p>'+all.map(e=>{
+      const d=examDays(e);
+      const label=d<0?'vorbei':d===0?'heute':d===1?'morgen':'in '+d+' Tagen';
+      return '<div class="exrow"><div><b>'+subjLabel(e.subj)+'</b><div class="small muted">'+dateLong(e.date)+', '+label+'</div></div>'+(ui.delEx===e.id?'<div class="row"><button class="btn danger small" data-a="exdelyes" data-e="'+e.id+'">Ja, entfernen</button><button class="btn ghost small" data-a="exdelno">Abbrechen</button></div>':'<button class="btn ghost danger small" data-a="exdel" data-e="'+e.id+'">Entfernen</button>')+'</div>';
+    }).join('')+'</div>';
+  }
+  let stoff;
+  if(x.subj==='math'){
+    stoff='<div class="chks">'+TOPICS.map(t=>'<label class="chk"><input type="checkbox" class="extop" value="'+t.id+'"'+(x.topics.indexOf(t.id)>=0?' checked':'')+'>'+t.name+'</label>').join('')+'</div>';
+  }else{
+    const ls=state.sets.filter(st=>st.lang===x.subj);
+    stoff=ls.length?'<div class="chks">'+ls.map(st=>'<label class="chk"><input type="checkbox" class="exset" value="'+st.id+'"'+(x.sets.indexOf(st.id)>=0?' checked':'')+'>'+esc(st.name)+' ('+st.cards.length+' Wörter)</label>').join('')+'</div>':'<div class="fb info">Lege zuerst unter Vokabeln eine Liste für dieses Fach an.</div>';
+  }
+  return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="home">← Start</button><h1>Arbeiten</h1><p class="muted">Trage den Termin ein. Die App verteilt den Stoff auf die Tage bis dahin.</p></div>'+rows+
+    '<div class="card stack"><h2>Neue Arbeit</h2>'+
+    '<div><label class="lab" for="exsubj">Fach</label><select id="exsubj" class="select">'+[['math','Mathe'],['en','Englisch'],['fr','Französisch']].map(o=>'<option value="'+o[0]+'"'+(x.subj===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'+
+    '<div><label class="lab" for="exdate">Datum der Arbeit</label><input id="exdate" class="input" type="date" min="'+dkey()+'" value="'+esc(x.date)+'"></div>'+
+    '<div><p class="lab" style="margin-bottom:6px">Stoff</p>'+stoff+'</div>'+
+    (x.err?'<p class="err">'+esc(x.err)+'</p>':'')+
+    '<button class="btn block" data-a="exsave">Arbeit speichern</button></div></div>';
+}
+
 /* ---------- Render ---------- */
 function render(){
   const inSession=view==='vsess'||view==='msess';
@@ -662,9 +839,10 @@ function render(){
   else if(view==='math')html=mathList();
   else if(view==='msess')html=mathSession();
   else if(view==='settings')html=settings();
+  else if(view==='exams')html=examsView();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings')?'home':(view==='math'||view==='msess')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='exams')?'home':(view==='math'||view==='msess')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
@@ -672,20 +850,30 @@ function render(){
   ui.focus=false;
 }
 function go(v){
-  ui.confirmDel=false;ui.confirmReset=false;
+  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;
   view=v;window.scrollTo(0,0);render();
 }
 
 /* ---------- Vokabeln: Ablauf ---------- */
 function startVocab(scope,force){
-  const sets=scope==='all'?state.sets:state.sets.filter(function(s){return s.id===scope;});
-  const pool=[];
-  sets.forEach(function(s){s.cards.forEach(function(c){pool.push({s:s,c:c});});});
-  if(!pool.length)return;
+  let pool=[],examId=null,phase='';
+  if(scope.indexOf('exam:')===0){
+    const e=getExam(scope.slice(5));
+    if(!e){go('exams');return;}
+    examId=e.id;pool=examCardsOf(e);phase=examPlan(e).pl.phase;
+  }else{
+    const sets=scope==='all'?state.sets:state.sets.filter(function(s){return s.id===scope;});
+    sets.forEach(function(s){s.cards.forEach(function(c){pool.push({s:s,c:c});});});
+  }
+  if(!pool.length){go(examId?'exams':'vocab');return;}
   const now=Date.now();
   let pick10;
   const due=pool.filter(function(x){return x.c.due<=now;});
-  if(due.length&&!force){
+  if(examId){
+    let cand=pool;
+    if(phase==='repeat'){const weak=pool.filter(function(x){return x.c.box<=3;});if(weak.length)cand=weak;}
+    pick10=shuffle(cand).sort(function(a,b){return ((a.c.due<=now?0:1)-(b.c.due<=now?0:1))||(a.c.box-b.c.box);}).slice(0,10);
+  }else if(due.length&&!force){
     pick10=shuffle(due).sort(function(a,b){return a.c.box-b.c.box;}).slice(0,10);
   }else{
     pick10=shuffle(pool).slice(0,10);
@@ -694,7 +882,7 @@ function startVocab(scope,force){
     const dir=state.vdir==='mixed'?(Math.random()<.5?'d2f':'f2d'):state.vdir;
     return {sid:x.s.id,cid:x.c.id,dir:dir,failed:false};
   });
-  ui.vs={queue:queue,total:queue.length,correct:0,pts:0,missed:[],phase:'ask',retried:false,hinted:false,hint:'',keep:'',msg:'',fb:null};
+  ui.vs={queue:queue,total:queue.length,correct:0,pts:0,missed:[],phase:'ask',retried:false,hinted:false,hint:'',keep:'',msg:'',fb:null,examId:examId};
   prepVocab();
   view='vsess';ui.focus=true;render();
 }
@@ -713,7 +901,7 @@ function vFinish(ok,text){
   if(ok){
     gain=vs.hinted?5:vs.retried?6:10;
     if(!q.failed){
-      vs.correct++;
+      vs.correct++;if(vs.examId)addExamProg(vs.examId);
       card.box=Math.min(5,card.box+1);
       card.due=todayStart()+INTERVAL[card.box]*DAY;
     }
@@ -747,7 +935,10 @@ function vNext(){
 
 /* ---------- Mathe: Ablauf ---------- */
 function newItem(tid,prevQ){
-  const id=tid==='mix'?pick(TOPICS).id:tid;
+  let id;
+  if(tid==='mix')id=pick(TOPICS).id;
+  else if(tid.indexOf('exam:')===0){const e=getExam(tid.slice(5));const ids=e?examTopics(e):[];id=ids.length?pickTopic(ids):pick(TOPICS).id;}
+  else id=tid;
   const t=TOPICS.find(function(x){return x.id===id;});
   const lvl=mstat(id).level;
   let it,tries=0;
@@ -756,7 +947,7 @@ function newItem(tid,prevQ){
   return it;
 }
 function startMath(tid){
-  ui.ms={tid:tid,solved:0,pts:0,item:newItem(tid),tips:0,attempts:0,phase:'ask',msg:'',keep:'',result:'',gain:0,lvlmsg:''};
+  ui.ms={tid:tid,examId:(tid.indexOf('exam:')===0?tid.slice(5):null),solved:0,pts:0,item:newItem(tid),tips:0,attempts:0,phase:'ask',msg:'',keep:'',result:'',gain:0,lvlmsg:''};
   view='msess';window.scrollTo(0,0);ui.focus=true;render();
 }
 function mCheck(){
@@ -770,7 +961,7 @@ function mCheck(){
   if(r==='ok'){
     const st=mstat(it.topicId);
     m.gain=Math.max(3,15-5*m.tips-(m.attempts>1?3:0));
-    m.pts+=m.gain;m.solved++;addPts(m.gain);bump();
+    m.pts+=m.gain;m.solved++;addPts(m.gain);bump();if(m.examId)addExamProg(m.examId);
     const clean=m.tips===0&&m.attempts===1;
     st.fail=0;
     if(clean){st.clean++;if(st.clean>=3&&st.level<3){st.level++;st.clean=0;m.lvlmsg='Stark. Weiter geht es mit Stufe '+st.level+'.';}}
@@ -844,17 +1035,38 @@ document.addEventListener('click',function(ev){
     case 'vhint':{const vs=ui.vs;const alt=String(vs.cur.answer).split(/[\/;]/)[0].trim();vs.hint=alt.slice(0,1)+' …';vs.hinted=true;vs.keep=$('ans').value;ui.focus=true;render();break;}
     case 'vskip':vFinish(false);break;
     case 'vnext':vNext();break;
-    case 'vend':go('vocab');break;
+    case 'vend':go(ui.vs&&ui.vs.examId?'home':'vocab');break;
     case 'mstart':startMath(t.dataset.t);break;
     case 'mcheck':mCheck();break;
     case 'mtip':if(ui.ms.tips<2){ui.ms.keep=$('ans').value;ui.ms.tips++;ui.focus=true;render();}break;
     case 'msol':ui.ms.keep='';mSol();break;
     case 'mnext':mNext();break;
-    case 'mend':go('math');break;
+    case 'mend':go(ui.ms&&ui.ms.examId?'home':'math');break;
+    case 'examgo':{
+      const e=getExam(t.dataset.e);if(!e)break;
+      if(e.subj==='math'){if(!examTopics(e).length){go('exams');break;}startMath('exam:'+e.id);}
+      else startVocab('exam:'+e.id);
+      break;}
+    case 'exsave':{
+      readEx();const x=ui.ex;
+      if(!x.date){x.err='Wähle das Datum der Arbeit.';render();break;}
+      if(daysUntil(x.date,new Date())<0){x.err='Das Datum liegt in der Vergangenheit.';render();break;}
+      if(x.subj==='math'?!x.topics.length:!x.sets.length){x.err='Wähle mindestens '+(x.subj==='math'?'ein Thema':'eine Liste')+' aus.';render();break;}
+      state.exams.push({id:uid(),subj:x.subj,date:x.date,sets:x.subj==='math'?[]:x.sets,topics:x.subj==='math'?x.topics:[],prog:{}});
+      save();ui.ex=null;go('home');break;}
+    case 'exdel':readEx();ui.delEx=t.dataset.e;render();break;
+    case 'exdelno':readEx();ui.delEx=null;render();break;
+    case 'exdelyes':state.exams=state.exams.filter(e=>e.id!==t.dataset.e);ui.delEx=null;save();render();break;
     case 'ssave':{const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
     case 'reset':ui.confirmReset=true;render();break;
     case 'resetno':ui.confirmReset=false;render();break;
     case 'resetyes':state=defaultState();save();ui={};go('home');break;
+  }
+});
+document.addEventListener('change',function(ev){
+  if(ev.target&&ev.target.id==='exsubj'&&ui.ex){
+    const dt=$('exdate'),date=dt?dt.value:'';
+    ui.ex=newEx(ev.target.value);ui.ex.date=date;render();
   }
 });
 document.addEventListener('keydown',function(ev){

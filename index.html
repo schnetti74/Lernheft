@@ -108,6 +108,16 @@ label.lab{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
 .words div{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
 .words div:last-child{border-bottom:0}
 .words span{min-width:0;overflow-wrap:anywhere}
+.say{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.say svg{width:24px;height:24px;fill:currentColor}
+.say:active{background:var(--accent);color:var(--accent-ink)}
+.ipa{font-size:19px;color:var(--muted);letter-spacing:.02em}
+.wd{font-family:var(--font-display);font-weight:800;font-size:24px;line-height:1.2;overflow-wrap:anywhere}
+.tr{font-size:20px;font-weight:700}
+.exq{border-left:4px solid var(--mark);padding:2px 0 2px 12px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.exq p{font-size:18px;min-width:0}
+.exq b{background:linear-gradient(transparent 55%,var(--mark) 55%)}
+.nt{background:var(--tipbg);border-radius:10px;padding:10px 12px;font-size:16px}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
 .nav[hidden]{display:none!important}
 .nav .in{display:flex;gap:6px;width:100%;max-width:640px}
@@ -486,11 +496,16 @@ function checkLin(user,ans){
 const unAccent=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/œ/g,'oe').replace(/æ/g,'ae');
 const normV=s=>String(s).toLowerCase().replace(/[’‘`´]/g,"'").replace(/\(.*?\)/g,' ').replace(/[.!?,]/g,'').replace(/\s+/g,' ').trim();
 function altsOf(raw){return String(raw).split(/[\/;]/).map(normV).filter(Boolean);}
+const LEADDE=/^(der|die|das|ein|eine|sich|etwas|jn|jm|jemanden|jemandem) /;
 function formsOf(alt,side){
   const f=[alt];
   if(side==='en'&&alt.indexOf('to ')===0)f.push(alt.slice(3));
+  if(side==='en'){
+    const m=alt.replace(/^(the|a|an) /,'');
+    if(m!==alt)f.push(m);
+  }
   if(side==='de'){
-    const m=alt.replace(/^(der|die|das|ein|eine|sich) /,'');
+    const m=alt.replace(LEADDE,'');
     if(m!==alt)f.push(m);
   }
   return f;
@@ -509,8 +524,19 @@ function lev(a,b){
   return prev[n];
 }
 function checkVocab(user,answerRaw,side){
-  const u=normV(user);
-  if(!u)return {r:'empty'};
+  const u0=normV(user);
+  if(!u0)return {r:'empty'};
+  const cands=side==='de'?[u0,u0.replace(LEADDE,'')]:[u0];
+  let best={r:'wrong'};
+  for(let i=0;i<cands.length;i++){
+    if(!cands[i])continue;
+    const r=checkOne(cands[i],answerRaw,side);
+    if(r.r==='ok')return r;
+    if(r.r==='almost'&&best.r==='wrong')best=r;
+  }
+  return best;
+}
+function checkOne(u,answerRaw,side){
   const alts=altsOf(answerRaw);
   for(let i=0;i<alts.length;i++){if(formsOf(alts[i],side).indexOf(u)>=0)return {r:'ok'};}
   for(let i=0;i<alts.length;i++){
@@ -531,11 +557,17 @@ function parseLines(text){
   const cards=[];let skipped=0;
   String(text).split(/\r?\n/).forEach(function(line){
     if(!line.trim())return;
+    const parts=line.split('|');line=parts[0];
     const mm=/=|\t|\s[\u2013\u2014-]\s/.exec(line);
     if(!mm){skipped++;return;}
     const fx=line.slice(0,mm.index).trim(),de=line.slice(mm.index+mm[0].length).trim();
     if(!fx||!de){skipped++;return;}
-    cards.push({fx:fx,de:de});
+    const card={fx:fx,de:de};
+    const clean=function(x){return String(x||'').trim().replace(/^[\[\/]+|[\]\/]+$/g,'').trim();};
+    if(clean(parts[1]))card.ipa=clean(parts[1]);
+    if(parts[2]&&parts[2].trim())card.ex=parts[2].trim();
+    if(parts[3]&&parts[3].trim())card.nt=parts[3].trim();
+    cards.push(card);
   });
   return {cards:cards,skipped:skipped};
 }
@@ -568,8 +600,10 @@ const esc=s=>String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&
 const uid=()=>Math.random().toString(36).slice(2,9);
 
 
+/* Access G9 Band 3, Unit 1: Beispielsätze und Hinweise sind eigene Texte */
+const PRESETS=[{"id":"a3u1-a1","name":"U1 · Part A · 1 (S. 227)","cards":[["the best thing about ...","das Beste an ...","","The *best thing about* my school is the sports hall.",""],["huge","riesig / sehr groß","'hju:dʒ","The giraffe house at the zoo is *huge*.",""],["as soon as","sobald / sowie","əz 'su:n əz","I'll text you *as soon as* I get home.",""],["cathedral","Kathedrale / Dom","kə'θi:drəl","We climbed to the top of St Paul's *Cathedral*.","Betonung auf der 2. Silbe: ca-THE-dral. Französisch: la cathédrale."],["palace","Palast / Schloss","'pæləs","Buckingham *Palace* is a famous building in London.","Betonung auf der 1. Silbe: PA-lace. Französisch: le palais."],["Welsh","walisisch","welʃ","My friend from Cardiff speaks *Welsh* at home.",""],["to reply (to)","antworten (auf) / erwidern / entgegnen","rɪ'plaɪ","I *replied* to Mia's message right away.",""],["Europe","Europa","'jʊərəp","France and Spain are countries in *Europe*.","Das E am Anfang spricht man wie 'ju', anders als im Deutschen."],["western","westlich / West-","'westən","Wales is in the *western* part of Britain.",""],["I see.","Aha! / Verstehe.","","The bus is late. – *I see.* Then let's wait.",""],["lift","Fahrstuhl / Aufzug","lɪft","The *lift* is broken, so we take the stairs.","Im amerikanischen Englisch sagt man 'elevator'."],["amazing","erstaunlich / unglaublich","ə'meɪzɪŋ","The view from the London Eye is *amazing*.",""],["quite","ziemlich / völlig / ganz","kwaɪt","It's *quite* cold today, so I'll wear a jacket.","'quite' kann 'ziemlich' oder 'ganz' heißen: 'not quite good enough' = nicht ganz gut genug."],["queue","Schlange / Reihe","kju:","There was a long *queue* in front of the cinema.","Gemeint ist eine Schlange wartender Menschen, nicht das Tier."],["How do you know ...?","Woher weißt du ...? / Woher kennst du ...?","","*How do you know* Jack? – We play football together.",""],["post","Posting / Blog-Eintrag","pəʊst","I wrote a new *post* for our class blog.","Im Blog ist es ein Eintrag, nicht die Post, die der Briefträger bringt."],["to add (to)","hinzufügen / ergänzen / addieren (zu)","æd","*Add* two spoons of sugar to the milk.",""]]},{"id":"a3u1-a2","name":"U1 · Part A · 2 (S. 227)","cards":[["carnival","Karneval / Fasching","'kɑ:nɪvl","We watched the *carnival* parade in Notting Hill.","Im Englischen sind mit 'carnival' allgemein bunte Umzüge mit Musik, Tanz und Festwagen gemeint, nicht nur Fasching."],["test","Test","test","We have an English *test* on Friday.",""],["to be into (sth.)","etwas mögen / auf etwas stehen","","My sister *is into* K-pop.","Umgangssprache: auf etwas stehen, etwas richtig gern mögen."],["to enjoy","genießen","ɪn'dʒɔɪ","I really *enjoyed* the film last night.","Oft auch: Spaß an etwas haben, zum Beispiel 'I enjoy swimming.'"],["by the way","übrigens","baɪ ðə 'weɪ","*By the way*, did you do your homework?",""],["north","Norden / nördlich","nɔ:θ","Scotland is in the *north* of Britain.",""],["east","Osten / östlich","i:st","The sun rises in the *east*.",""],["south","Süden / südlich","saʊθ","Spain is *south* of France.",""],["west","Westen / westlich","west","The sun sets in the *west*.",""],["north-east","Nordosten","ˌnɔ:θ'i:st","Newcastle is in the *north-east* of England.",""],["south-east","Südosten","ˌsaʊθ'i:st","London is in the *south-east* of England.",""],["south-west","Südwesten","ˌsaʊθ'west","Cornwall is in the *south-west* of England.",""],["north-west","Nordwesten","ˌnɔ:θ'west","Liverpool is in the *north-west* of England.",""]]},{"id":"a3u1-a3","name":"U1 · Part A · 3 (S. 228)","cards":[["darkness","Dunkelheit / Finsternis","'dɑ:knəs","We walked home through the *darkness*.",""],["clue","Hinweis / Anhaltspunkt","klu:","The detective found a *clue* under the sofa.",""],["skyline","Skyline / Horizont","'skaɪlaɪn","You can see London's *skyline* from the river.",""],["false","falsch","fɔ:ls","London is the capital of France. – That's *false*!","Das Gegenteil ist 'true' (wahr)."],["to stay (at, with)","(vorübergehend) wohnen / übernachten (in, bei)","steɪ","We *stayed* with my grandma for the weekend.","'stay at a hotel' = im Hotel übernachten, 'stay with sb.' = bei jemandem wohnen."],["timetable","Fahrplan / Stundenplan","'taɪmteɪbl","Check the bus *timetable* before you leave.","Zwei Bedeutungen: Fahrplan und Stundenplan."],["restaurant","Restaurant","'restrɒnt","We had dinner in an Italian *restaurant*.","Das 'au' hört man kaum: 'res-tront'. Französisch: le restaurant."],["gallery","Galerie","'gæləri","The National *Gallery* has famous paintings.","Betonung auf der 1. Silbe: GAL-le-ry (im Deutschen liegt sie auf der letzten). Französisch: la galerie."],["the Tube / the underground","die U-Bahn (in London)","tju:b / 'ʌndəgraʊnd","We took the *Tube* to Oxford Circus.","In London sagt man 'the Tube'. Man fährt 'on the Tube', nicht 'in the Tube'."],["to go together","zusammenpassen / zueinander passen","","Blue and yellow *go together* really well.",""],["stress","Betonung","stres","Where's the *stress* in the word 'cathedral'?","Das ist das Nomen. Das Verb 'to stress' kommt gleich danach."],["stress mark","Betonungszeichen","'stres mɑ:k","The *stress mark* comes before the stressed syllable.",""],["to stress","betonen","stres","You *stress* the first syllable of 'gallery'.",""],["small talk","Smalltalk","'smɔ:l tɔ:k","We made *small talk* while we waited for the bus.","Lockeres Gespräch über Alltägliches, zum Beispiel übers Wetter."],["culture","Kultur","'kʌltʃə","I'd like to learn more about British *culture*.","Betonung auf der 1. Silbe: CUL-ture. Französisch: la culture."],["to expect (sth.)","etwas erwarten","ɪk'spekt","We *expected* a lot of tourists at the museum.","Nicht verwechseln: 'expect' = erwarten, 'wait' = warten."],["to continue (sth.)","etwas fortsetzen","kən'tɪnju:","After lunch we *continued* our walk.","Französisch: continuer."]]},{"id":"a3u1-b1","name":"U1 · Part B · 1 (S. 228–229)","cards":[["attraction","Attraktion / Anziehungspunkt","ə'trækʃn","The London Eye is a popular tourist *attraction*.","Französisch: l'attraction."],["natural history","Naturkunde","ˌnætʃrəl 'hɪstri","We visited the *Natural History* Museum in London.",""],["entry","Eintritt / Zutritt","'entri","*Entry* to many museums is free.","Französisch: l'entrée."],["in fact","eigentlich / in Wirklichkeit","ɪn 'fækt","It looks small, but *in fact* it's very big.",""],["fact","Tatsache / Fakt","fækt","Here's a fun *fact*: the first underground railway opened in London.","Französisch: le fait."],["to reserve","reservieren / buchen","rɪ'zɜ:v","I'd like to *reserve* a table for four, please.","Französisch: réserver."],["step","Stufe / Schritt","step","Be careful, there's a *step* at the door.","Zwei Bedeutungen: Stufe und Schritt."],["chance","Gelegenheit / Möglichkeit / Chance","tʃɑ:ns","Take the *chance* to visit Tower Bridge if you can.","Gesprochen wird es 'tschahns', mit langem a. Französisch: la chance."],["during","während (+ Nomen)","'djʊərɪŋ","I fell asleep *during* the film.","'during' steht vor einem Nomen. Vor einem ganzen Satz sagt man 'while'."],["to guard","bewachen","gɑ:d","Two dogs *guard* the farm.",""],["raven","Rabe","'reɪvn","A big black *raven* sat on the wall.",""],["blood","Blut","blʌd","The nurse took a little *blood* from my arm.","Das Wort reimt sich auf 'mud'."],["to be home to (sth.)","Heimat sein für etwas / etwas beheimaten","","London *is home to* millions of people.",""],["jewels","Juwelen","'dʒu:əlz","The Crown *Jewels* are kept in the Tower of London.","Betonung auf der 1. Silbe: JEW-els."]]},{"id":"a3u1-b2","name":"U1 · Part B · 2 (S. 229)","cards":[["education","(Schul-)Bildung / Erziehung","ˌedʒu'keɪʃn","A good *education* is important for a good job.","Französisch: l'éducation."],["adult","Erwachsener / Erwachsene","'ædʌlt","Tickets cost five pounds for an *adult* and two for a child.","Französisch: l'adulte."],["figure","Zahl / Ziffer","'fɪgə","Can you check the *figures* in this table?","Betonung auf der 1. Silbe: FI-gure."],["less (than)","weniger (als)","les","I have *less* time than my brother.","Das Gegenteil ist 'more'."],["tortoise","Schildkröte / Landschildkröte","'tɔ:təs","The *tortoise* walked very slowly.","Französisch: la tortue."],["parliament","Parlament","'pɑ:ləmənt","*Parliament* meets in London.","Achtung Schreibweise: parl-ia-ment, mit 'ia'. Französisch: le parlement."],["government","Regierung","'gʌvənmənt","The *government* wants to build new schools.","Schreibweise: gover-n-ment, das 'n' in der Mitte nicht vergessen. Französisch: le gouvernement."],["at one time","zur selben Zeit / gleichzeitig","","You can't talk to three people *at one time*.",""],["Christmas","Weihnachten","'krɪsməs","We eat turkey at *Christmas*.","Das 't' hört man nicht: 'kris-mes'. Der 1. Weihnachtsfeiertag heißt 'Christmas Day'."],["ticket office","Fahrkartenschalter / Kasse","'tɪkɪt ˌɒfɪs","You can buy tickets at the *ticket office*.",""],["detail","Detail / Einzelheit","'di:teɪl","Please tell me every *detail*.","Betonung auf der 1. Silbe: DE-tail. Französisch: le détail."]]},{"id":"a3u1-b3","name":"U1 · Part B · 3 (S. 229–230)","cards":[["a family of four","eine vierköpfige Familie","","We are *a family of four*: my parents, my brother and me.",""],["exact","genau","ɪg'zækt","What's the *exact* time?",""],["linking word","Bindewort","'lɪŋkɪŋ wɜ:d","'And' and 'but' are *linking words*.",""],["to link","verbinden / verknüpfen","lɪŋk","You can *link* two sentences with 'because'.",""],["instead of","anstelle von / statt","ɪn'sted əv","I'd like tea *instead of* coffee.","'instead of' + Nomen = anstelle von. 'instead' allein heißt stattdessen: I don't like tea. Can I have juice instead?"],["worth","wert","wɜ:θ","The ticket is *worth* ten pounds.",""],["to roar","brüllen","rɔ:","The lion *roared* loudly.",""],["feedback","Rückmeldung / Feedback","'fi:dbæk","Thanks for your *feedback* on my project.",""],["to improve","verbessern / sich verbessern","ɪm'pru:v","Your English will *improve* if you read a lot.",""],["to react (to)","reagieren (auf)","ri'ækt","The dog didn't *react* when I called.",""],["content","Inhalt","'kɒntent","The *content* of the book is very interesting.",""],["to point (sth.) out (to sb.)","(jemanden) auf etwas hinweisen","pɔɪnt 'aʊt","She *pointed out* a mistake in my text.",""],["spelling","Rechtschreibung / Schreibweise","'spelɪŋ","My *spelling* is getting better.",""]]},{"id":"a3u1-b4","name":"U1 · Part B · 4 (S. 230)","cards":[["line","Linie / U-Bahn-Linie","laɪn","Which *line* goes to Oxford Circus?","Französisch: la ligne."],["eastbound","Richtung Osten","'i:stbaʊnd","This train is *eastbound*.","Bei Zügen und Straßen: in Richtung Osten unterwegs."],["westbound","Richtung Westen","'westbaʊnd","The *westbound* train leaves from platform two.",""],["northbound","Richtung Norden","'nɔ:θbaʊnd","Take the *northbound* line to King's Cross.",""],["southbound","Richtung Süden","'saʊθbaʊnd","The *southbound* trains are late today.",""],["to change","umsteigen","tʃeɪndʒ","You have to *change* at King's Cross.","Hier heißt 'change' nicht ändern, sondern umsteigen. Französisch: changer."],["platform","Bahnsteig / Gleis","'plætfɔ:m","The train leaves from *platform* nine.",""],["announcement","Durchsage / Ansage","ə'naʊnsmənt","Please listen to the *announcement*.","Französisch: l'annonce."],["message","Nachricht / Botschaft","'mesɪdʒ","I got a *message* from Lena.","Zwei Bedeutungen: Nachricht (zum Beispiel eine SMS) und Botschaft (die Aussage eines Textes). Französisch: le message."]]},{"id":"a3u1-c1","name":"U1 · Part C · 1 (S. 230–231)","cards":[["to be on","eingeschaltet sein / an sein / laufen (im Fernsehen)","","The lights *are on*, so someone is at home.","Das Gegenteil ist 'to be off'. Im Fernsehen: 'The football is on.'"],["remote control","Fernbedienung","rɪˌməʊt kən'trəʊl","Where's the *remote control*?","Kurz sagt man auch 'the remote'."],["No way!","Auf keinen Fall! / Kommt nicht in Frage!","nəʊ 'weɪ","Can I stay up until midnight? – *No way!*",""],["And anyway, ...","Und überhaupt, ...","'eniweɪ","I'm tired. *And anyway*, it's too late.",""],["while","während (+ Satz)","waɪl","I listen to music *while* I do my homework.","'while' steht vor einem ganzen Satz. Vor einem Nomen sagt man 'during'."],["to turn (sth.) up","etwas lauter stellen","tɜ:n","Can you *turn up* the music, please?",""],["to turn (sth.) down","etwas leiser stellen","","Please *turn down* the TV. I'm doing my homework.",""],["to turn","sich drehen / sich umdrehen / abbiegen","tɜ:n","The woman *turned* round and smiled.","Weitere Bedeutungen: 'turn on' = einschalten, 'turn to sb.' = sich jemandem zuwenden, 'turn left' = links abbiegen."],["each other","sich gegenseitig / einander","ˌi:tʃ 'ʌðə","Mia and Sam help *each other* with homework.",""],["pub","Kneipe / Lokal","pʌb","We had lunch in a nice *pub*.",""],["towards","in Richtung / auf etwas zu","tə'wɔ:dz","She walked *towards* the station.",""],["mate","Kumpel / Freund","meɪt","I play football with my *mates* every Saturday.","Umgangssprache, sehr britisch."],["several","mehrere / verschiedene","'sevrəl","I've read *several* books by this author.","Mehr als zwei oder drei, aber nicht besonders viele."],["route","Strecke / Route","ru:t","What's the best *route* to the airport?","Vorsicht: Im Französischen heißt 'la route' Straße."],["speed","Geschwindigkeit","spi:d","The train travels at high *speed*.",""],["It was a pity that ...","Es war schade, dass ...","'pɪti","*It was a pity that* it rained all day.",""]]},{"id":"a3u1-n1","name":"U1 · Notting Hill · 1 (S. 231)","cards":[["to hold onto (sth.)","sich an etwas festhalten","həʊld 'ɒntu","She *held onto* the rope with both hands.","Unregelmäßig: hold – held – held."],["to scan (sth.) (for sth.)","etwas (nach etwas) absuchen","skæn","The police *scanned* the street for clues.",""],["to fill","füllen","fɪl","*Fill* the glass with water, please.",""],["pavement","Gehweg / Bürgersteig","'peɪvmənt","Don't ride your bike on the *pavement*.","Im amerikanischen Englisch sagt man 'sidewalk'."],["available","erhältlich / verfügbar / erreichbar","ə'veɪləbl","Tickets are *available* online.","Am Telefon heißt es erreichbar: Is Mr Bell available?"],["all around her","überall um sie herum","","Suddenly there were people *all around her*.",""],["whistle","Pfeife / Trillerpfeife","'wɪsl","The referee blew his *whistle*.","Das 't' hört man nicht: 'wissl'."],["to blow a whistle","pfeifen (auf der Trillerpfeife)","bləʊ ə 'wɪsl","The guard *blew a whistle* and the train left.","Unregelmäßig: blow – blew – blown."],["to panic","in Panik geraten","'pænɪk","Don't *panic*! We still have time.","Schreibweise: panic – panicked – panicking, mit 'k'. Französisch: paniquer."],["to bend down","sich hinunterbeugen / sich bücken","bend","He *bent down* to tie his shoelaces.","Unregelmäßig: bend – bent – bent."],["crowded","voller Menschen / überfüllt","'kraʊdɪd","The Tube is always *crowded* at eight o'clock.",""]]},{"id":"a3u1-n2","name":"U1 · Notting Hill · 2 (S. 231–232)","cards":[["rope","Seil","rəʊp","The climbers held on to a long *rope*.",""],["wing","Flügel","wɪŋ","The bird hurt its *wing*.",""],["rainbow","Regenbogen","'reɪnbəʊ","After the rain we saw a *rainbow*.",""],["dizzy","schwindlig","'dɪzi","I felt *dizzy* after the ride.",""],["hip","Hüfte","hɪp","She put her hands on her *hips*.",""],["to scream","schreien","skri:m","The children *screamed* with excitement.",""],["rhythm","Rhythmus","'rɪðəm","I love the *rhythm* of this song.","Schwierige Schreibweise: r-h-y-t-h-m. Französisch: le rythme."],["to scare (sb.)","jemanden erschrecken / jemandem Angst machen","skeə","Horror films *scare* me.","Verwandt: scared = verängstigt, scary = unheimlich."],["loudspeaker","Lautsprecher / Megaphon","ˌlaʊd'spi:kə","The announcement came from a *loudspeaker*.",""],["to mind","etwas dagegen haben","maɪnd","I don't *mind* waiting.","Meist verneint oder in Fragen benutzt."],["Do you mind if ...?","Stört es dich, wenn ...? / Hast du etwas dagegen, wenn ...?","","*Do you mind if* I open the window?","Als Antwort 'kein Problem': No, not at all."],["to rest","ruhen / sich ausruhen","rest","Let's *rest* for a few minutes.",""],["under his breath","flüsternd / murmelnd","'breθ","She whispered something *under her breath*.",""]]}];
 function defaultState(){
-  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink']};
+  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink'],presetSeen:[]};
 }
 function migrate(st){
   const gone=new Set();
@@ -578,6 +612,16 @@ function migrate(st){
     st.exams=(st.exams||[]).map(function(e){if(e.subj!=='math')e.sets=(e.sets||[]).filter(function(id){return !gone.has(id);});return e;}).filter(function(e){return e.subj==='math'||(e.sets||[]).length>0;});
   }
   if(!Array.isArray(st.hiddenTopics))st.hiddenTopics=[];
+  if(!Array.isArray(st.presetSeen))st.presetSeen=[];
+  PRESETS.forEach(function(p){
+    if(st.presetSeen.indexOf(p.id)>=0)return;
+    st.presetSeen.push(p.id);
+    st.sets.push({id:p.id,name:p.name,lang:'en',builtin:false,preset:true,cards:p.cards.map(function(c,i){
+      const o={id:p.id+'-'+i,fx:c[0],de:c[1],box:1,due:0,u:1};
+      if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];
+      return o;
+    })});
+  });
   return st;
 }
 function load(){
@@ -585,7 +629,7 @@ function load(){
     const raw=localStorage.getItem(KEY);
     if(raw){const s=JSON.parse(raw);return migrate(Object.assign(defaultState(),s));}
   }catch(e){}
-  return defaultState();
+  return migrate(defaultState());
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 
@@ -627,8 +671,42 @@ function pickTopic(ids){
   for(let i=0;i<ids.length;i++){r-=w[i];if(r<=0)return ids[i];}
   return ids[ids.length-1];
 }
-const dueCount=function(set){const n=Date.now();return set.cards.filter(function(c){return c.due<=n;}).length;};
+const dueCount=function(set){const n=Date.now();return set.cards.filter(function(c){return !c.u&&c.due<=n;}).length;};
 const langName=function(l){return l==='fr'?'Französisch':'Englisch';};
+const NEWMAX=6;
+const newCount=function(set){return set.cards.filter(function(c){return c.u;}).length;};
+const deShow=function(x){return String(x).replace(/\s*\/\s*/g,', ');};
+const hl=function(x){return esc(x).replace(/\*(.+?)\*/g,'<b>$1</b>');};
+function findCard(cid){for(let i=0;i<state.sets.length;i++){const c=state.sets[i].cards.find(function(x){return x.id===cid;});if(c)return {s:state.sets[i],c:c};}return null;}
+function mkCard(c){const o={id:uid(),fx:c.fx,de:c.de,box:1,due:0,u:1};['ipa','ex','nt'].forEach(function(k){if(c[k])o[k]=c[k];});return o;}
+function canSpeak(){try{return typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance==='function';}catch(e){return false;}}
+function speak(text,lang,rate){
+  if(!canSpeak()||!text)return;
+  try{
+    const syn=window.speechSynthesis;syn.cancel();
+    const u=new window.SpeechSynthesisUtterance(text);u.lang=lang;u.rate=rate||0.9;
+    const vs=syn.getVoices()||[],l=lang.toLowerCase();
+    let v=vs.filter(function(x){return x.lang&&x.lang.toLowerCase().replace('_','-')===l;});
+    if(!v.length)v=vs.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf(l.slice(0,2))===0;});
+    if(v.length)u.voice=v[0];
+    syn.speak(u);
+  }catch(e){}
+}
+function spokenWord(c){return String(c.fx).split(/\s*\/\s*/)[0].replace(/\(.*?\)/g,' ').replace(/\.\.\./g,' ').replace(/\s+/g,' ').trim();}
+function sayBtn(cid,w,label){
+  if(!canSpeak())return '';
+  return '<button type="button" class="say" data-a="say" data-c="'+cid+'" data-w="'+w+'" aria-label="'+label+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4.03v8.05A4.5 4.5 0 0 0 16.5 12zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>';
+}
+function extrasHtml(c){
+  let h='';
+  if(c.ex)h+='<div class="exq"><p>'+hl(c.ex)+'</p>'+sayBtn(c.id,'s','Satz anhören')+'</div>';
+  if(c.nt)h+='<div class="nt">'+esc(c.nt)+'</div>';
+  return h;
+}
+function cardFace(c,set,big){
+  return '<div class="card stack" style="gap:12px"><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div class="'+(big?'big':'wd')+'">'+esc(c.fx)+'</div>'+(c.ipa?'<div class="ipa">['+esc(c.ipa)+']</div>':'')+'</div>'+sayBtn(c.id,'w','Wort anhören')+'</div>'+
+    '<div class="tr">'+esc(deShow(c.de))+'</div>'+extrasHtml(c)+'</div>';
+}
 
 /* ---------- Bausteine ---------- */
 function pips(n){return '<div class="pips" aria-label="Stufe '+n+' von 3">'+[1,2,3].map(function(i){return '<i class="'+(i<=n?'on':'')+'"></i>';}).join('')+'</div>';}
@@ -653,6 +731,7 @@ function home(){
   const c=todayCount(),g=state.goal,C=213.6,dash=C*Math.min(1,c/g);
   const li=levelInfo(),st=streak();
   const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
+  const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   let first='';
   if(!state.name&&!state.nameSkipped){
     first='<div class="card stack"><div><label class="lab" for="nm">Wie heißt du?</label><input id="nm" class="input" autocomplete="given-name" maxlength="24"></div><button class="btn" data-a="savename">Los geht’s</button></div>';
@@ -666,7 +745,7 @@ function home(){
     '</div>'+
     examBlock()+
     '<div class="tiles">'+
-      '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(!state.sets.length?'Lege deine erste Liste an':due?due+' Karten warten auf dich':'Heute ist alles wiederholt')+'</span></button>'+
+      '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(!state.sets.length?'Lege deine erste Liste an':due?due+' Karten warten auf dich':newN?newN+' neue Wörter zum Lernen':'Heute ist alles wiederholt')+'</span></button>'+
       '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">'+visibleTopics().length+' Themen, mit Tipps</span></button>'+
     '</div>'+
     '<div class="row" style="gap:20px"><button class="link" data-a="go" data-v="exams">Arbeit eintragen</button><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
@@ -675,10 +754,11 @@ function home(){
 
 function vocabList(){
   const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
+  const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   return topBar()+'<div class="stack"><h1>Vokabeln</h1>'+
-    (!state.sets.length?'<div class="card stack"><h3>Noch keine Liste</h3><p class="muted">Lege eine Liste an und trage die W\u00F6rter aus dem Buch ein. Eine Zeile pro Wort, zum Beispiel: to borrow = ausleihen</p></div>':due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten üben ('+due+')</button>':'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>')+
+    (!state.sets.length?'<div class="card stack"><h3>Noch keine Liste</h3><p class="muted">Lege eine Liste an und trage die W\u00F6rter aus dem Buch ein. Eine Zeile pro Wort, zum Beispiel: to borrow = ausleihen</p></div>':(due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten wiederholen ('+due+')</button>':'')+(newN?'<button class="btn'+(due?' ghost':'')+' block" data-a="vstart" data-s="all" data-n="1">Neue Wörter lernen ('+Math.min(NEWMAX,newN)+' von '+newN+')</button>':'')+(!due&&!newN?'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>':''))+
     '<div class="list">'+state.sets.map(function(s){
-      return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
+      return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+(newCount(s)?'<span class="badge">'+newCount(s)+' neu</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
     }).join('')+'</div>'+
     '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+vocabTips()+
   '</div>';
@@ -686,15 +766,17 @@ function vocabList(){
 
 function vocabSet(){
   const s=getSet(ui.sid);if(!s){view='vocab';return vocabList();}
-  const d=dueCount(s);
+  const d=dueCount(s),nw=newCount(s);
   const dirs=[['d2f','Deutsch → '+langName(s.lang)],['f2d',langName(s.lang)+' → Deutsch'],['mixed','Gemischt']];
   return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="vocab">← Alle Listen</button><h1>'+esc(s.name)+'</h1></div>'+
     '<div class="card stack"><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span></div>'+boxesHtml(s)+
     '<p class="muted small">Richtig gewusste Karten wandern ein Fach weiter und kommen später wieder. Falsche Karten starten in Fach 1.</p></div>'+
     '<div><p class="lab" style="font-weight:700;font-size:15px;margin-bottom:6px">Richtung</p><div class="seg" role="group" aria-label="Richtung">'+dirs.map(function(x){return '<button data-a="vdir" data-d="'+x[0]+'" aria-pressed="'+(state.vdir===x[0])+'">'+x[1]+'</button>';}).join('')+'</div></div>'+
-    (d?'<button class="btn block" data-a="vstart" data-s="'+s.id+'">Üben ('+Math.min(10,d)+' von '+d+' fälligen Karten)</button>':'<div class="fb info">Für diese Liste ist heute nichts fällig.</div><button class="btn block" data-a="vstart" data-s="'+s.id+'" data-f="1">Trotzdem 10 Karten üben</button>')+
+    (nw&&!d?'<button class="btn block" data-a="vstart" data-s="'+s.id+'" data-n="1">Neue Wörter lernen ('+Math.min(NEWMAX,nw)+' von '+nw+')</button>':'')+
+    (d?'<button class="btn block" data-a="vstart" data-s="'+s.id+'">Wiederholen ('+Math.min(10,d)+' von '+d+' fälligen Karten)</button>':(s.cards.length>nw?'<div class="fb info">Für diese Liste ist heute nichts fällig.</div><button class="btn ghost block" data-a="vstart" data-s="'+s.id+'" data-f="1">Trotzdem 10 Karten üben</button>':''))+
+    (nw&&d?'<button class="btn ghost block" data-a="vstart" data-s="'+s.id+'" data-n="1">Neue Wörter lernen ('+Math.min(NEWMAX,nw)+' von '+nw+')</button>':'')+
     '<button class="btn ghost block" data-a="vedit" data-s="'+s.id+'">Wörter bearbeiten</button>'+
-    '<div><p class="eyebrow" style="margin-bottom:6px">Alle Wörter</p><div class="words">'+s.cards.map(function(c){return '<div><span>'+esc(c.fx)+'</span><span class="muted">'+esc(c.de)+'</span></div>';}).join('')+'</div></div>'+
+    '<div><p class="eyebrow" style="margin-bottom:6px">Alle Wörter</p><div class="words">'+s.cards.map(function(c){return '<div><span>'+esc(c.fx)+(c.ipa?'<br><span class="ipa" style="font-size:14px">['+esc(c.ipa)+']</span>':'')+(c.u?' <span class="badge">neu</span>':'')+'</span><span class="muted">'+esc(deShow(c.de))+'</span></div>';}).join('')+'</div></div>'+
   '</div>';
 }
 
@@ -711,6 +793,16 @@ function vocabEdit(){
   '</div>';
 }
 
+function vocabIntro(){
+  const vs=ui.vs,n=vs.intro.length,it=vs.intro[vs.ii],f=findCard(it.cid);
+  const last=vs.ii===n-1,pct=Math.round(vs.ii/n*100);
+  return '<div class="stack" style="gap:16px"><div class="row between"><button class="link" data-a="vend">✕ Beenden</button><span class="muted small">Neue Wörter: '+(vs.ii+1)+' von '+n+'</span></div>'+
+    '<div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div>'+
+    '<p class="muted small">Lies das Wort, hör es dir an und sprich es einmal laut nach. Danach wirst du abgefragt.</p>'+
+    (f?cardFace(f.c,f.s,true):'')+
+    '<div class="row"><button class="btn ghost" data-a="vintroback"'+(vs.ii?'':' disabled')+'>Zurück</button><button class="btn" style="flex:1" id="nextbtn" data-a="vintronext">'+(last?'Jetzt abfragen':'Weiter')+'</button></div></div>';
+}
+
 function vocabSession(){
   const vs=ui.vs,q=vs.queue[0];
   const remaining=new Set(vs.queue.map(function(x){return x.cid;})).size;
@@ -720,11 +812,12 @@ function vocabSession(){
     const f=vs.fb;
     return '<div class="stack" style="gap:20px">'+head+'<div class="card stack"><div class="eyebrow">'+esc(vs.dirLabel)+'</div><div class="big">'+esc(vs.promptShown)+'</div></div>'+
       '<div class="fb '+(f.ok?'good':'bad')+'">'+(f.ok?f.text:'Richtig wäre: <span style="font-size:20px">'+esc(f.answer)+'</span><br><span class="small">'+(f.requeued?'Die Karte kommt gleich noch einmal.':'')+'</span>')+'</div>'+
+      (vs.fbCard?cardFace(vs.fbCard.c,vs.fbCard.s,false):'')+
       '<button class="btn block" id="nextbtn" data-a="vnext">Weiter</button></div>';
   }
   const cur=vs.cur;
   return '<div class="stack" style="gap:20px">'+head+
-    '<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="big">'+esc(cur.prompt)+'</div>'+(vs.hint?'<p class="muted">Anfang: <b>'+esc(vs.hint)+'</b></p>':'')+'</div>'+
+    '<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div class="big" style="min-width:0">'+esc(cur.prompt)+'</div>'+(cur.toDe?sayBtn(cur.card.id,'w','Wort anhören'):'')+'</div>'+(cur.toDe&&cur.card.ipa?'<div class="ipa">['+esc(cur.card.ipa)+']</div>':'')+(vs.hint?'<p class="muted">Anfang: <b>'+esc(vs.hint)+'</b></p>':'')+'</div>'+
     '<div class="stack" style="gap:10px"><input id="ans" class="input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Deine Antwort" value="'+esc(vs.keep||'')+'">'+
     (cur.side==='fr'?keysRow(['é','è','ê','à','â','ç','ô','î','û','ë','ï','ù','œ',"'"]):'')+
     (vs.msg?'<div class="fb info">'+esc(vs.msg)+'</div>':'')+'</div>'+
@@ -735,7 +828,7 @@ function vocabResult(){
   const vs=ui.vs;
   return topBar()+'<div class="stack"><h1>Geschafft</h1>'+
     '<div class="card stack"><div class="big">'+vs.correct+' von '+vs.total+'</div><p>beim ersten Versuch gewusst. Du hast <b>'+vs.pts+' Punkte</b> geholt.</p></div>'+
-    (vs.missed.length?'<div><p class="eyebrow" style="margin-bottom:6px">Das schaust du dir nochmal an</p><div class="words" style="max-height:none">'+vs.missed.map(function(m){return '<div><span>'+esc(m.fx)+'</span><span class="muted">'+esc(m.de)+'</span></div>';}).join('')+'</div></div>':'<div class="fb good">Keine einzige Karte falsch.</div>')+
+    (vs.missed.length?'<div><p class="eyebrow" style="margin-bottom:6px">Das schaust du dir nochmal an</p><div class="words" style="max-height:none">'+vs.missed.map(function(m){return '<div><span>'+esc(m.fx)+'</span><span class="muted">'+esc(deShow(m.de))+'</span></div>';}).join('')+'</div></div>':'<div class="fb good">Keine einzige Karte falsch.</div>')+
     '<button class="btn block" data-a="go" data-v="'+(vs.examId?'home':'vocab')+'">'+(vs.examId?'Zur\u00FCck zum Start':'Zu den Listen')+'</button></div>';
 }
 
@@ -1001,12 +1094,13 @@ function vocabTips(){
 
 /* ---------- Render ---------- */
 function render(){
-  const inSession=view==='vsess'||view==='msess';
+  const inSession=view==='vsess'||view==='vintro'||view==='msess';
   let html='';
   if(view==='home')html=home();
   else if(view==='vocab')html=vocabList();
   else if(view==='vset')html=vocabSet();
   else if(view==='vedit')html=vocabEdit();
+  else if(view==='vintro')html=vocabIntro();
   else if(view==='vsess')html=vocabSession();
   else if(view==='vres')html=vocabResult();
   else if(view==='math')html=mathList();
@@ -1029,7 +1123,7 @@ function go(v){
 }
 
 /* ---------- Vokabeln: Ablauf ---------- */
-function startVocab(scope,force){
+function startVocab(scope,force,newOnly){
   let pool=[],examId=null,phase='';
   if(scope.indexOf('exam:')===0){
     const e=getExam(scope.slice(5));
@@ -1041,30 +1135,34 @@ function startVocab(scope,force){
   }
   if(!pool.length){go(examId?'exams':'vocab');return;}
   const now=Date.now();
+  const fresh=pool.filter(function(x){return x.c.u;}),seen=pool.filter(function(x){return !x.c.u;});
   let pick10;
-  const due=pool.filter(function(x){return x.c.due<=now;});
-  if(examId){
-    let cand=pool;
-    if(phase==='repeat'){const weak=pool.filter(function(x){return x.c.box<=3;});if(weak.length)cand=weak;}
-    pick10=shuffle(cand).sort(function(a,b){return ((a.c.due<=now?0:1)-(b.c.due<=now?0:1))||(a.c.box-b.c.box);}).slice(0,10);
-  }else if(due.length&&!force){
-    pick10=shuffle(due).sort(function(a,b){return a.c.box-b.c.box;}).slice(0,10);
+  if(newOnly){
+    pick10=fresh.slice(0,NEWMAX);
+  }else if(examId){
+    let cand=seen;
+    if(phase==='repeat'){const weak=seen.filter(function(x){return x.c.box<=3;});if(weak.length)cand=weak;}
+    const nw=fresh.slice(0,NEWMAX);
+    pick10=nw.concat(shuffle(cand).sort(function(a,b){return ((a.c.due<=now?0:1)-(b.c.due<=now?0:1))||(a.c.box-b.c.box);}).slice(0,10-nw.length));
   }else{
-    pick10=shuffle(pool).slice(0,10);
+    const due=seen.filter(function(x){return x.c.due<=now;});
+    pick10=(due.length&&!force)?shuffle(due).sort(function(a,b){return a.c.box-b.c.box;}).slice(0,10):shuffle(seen).slice(0,10);
   }
+  if(!pick10.length){go(examId?'exams':'vocab');return;}
   const queue=shuffle(pick10).map(function(x){
     const dir=state.vdir==='mixed'?(Math.random()<.5?'d2f':'f2d'):state.vdir;
     return {sid:x.s.id,cid:x.c.id,dir:dir,failed:false};
   });
-  ui.vs={queue:queue,total:queue.length,correct:0,pts:0,missed:[],phase:'ask',retried:false,hinted:false,hint:'',keep:'',msg:'',fb:null,examId:examId};
+  const intro=pick10.filter(function(x){return x.c.u;}).map(function(x){return {sid:x.s.id,cid:x.c.id};});
+  ui.vs={queue:queue,total:queue.length,correct:0,pts:0,missed:[],phase:'ask',retried:false,hinted:false,hint:'',keep:'',msg:'',fb:null,examId:examId,intro:intro,ii:0};
   prepVocab();
-  view='vsess';ui.focus=true;render();
+  view=intro.length?'vintro':'vsess';ui.focus=!intro.length;window.scrollTo(0,0);render();
 }
 function prepVocab(){
   const vs=ui.vs,q=vs.queue[0];if(!q)return;
   const set=getSet(q.sid),card=set.cards.find(function(c){return c.id===q.cid;});
   const toDe=q.dir==='f2d';
-  vs.cur={prompt:toDe?card.fx:card.de,answer:toDe?card.de:card.fx,side:toDe?'de':set.lang,dirLabel:toDe?langName(set.lang)+' → Deutsch':'Deutsch → '+langName(set.lang),card:card};
+  vs.cur={prompt:toDe?card.fx:deShow(card.de),toDe:toDe,set:set,answer:toDe?card.de:card.fx,side:toDe?'de':set.lang,dirLabel:toDe?langName(set.lang)+' → Deutsch':'Deutsch → '+langName(set.lang),card:card};
   vs.retried=false;vs.hinted=false;vs.hint='';vs.keep='';vs.msg='';
 }
 function vFinish(ok,text){
@@ -1094,7 +1192,7 @@ function vFinish(ok,text){
   }
   vs.pts+=gain;addPts(gain);save();
   vs.fb={ok:ok,answer:cur.answer.replace(/\s*\/\s*/g,' / '),text:ok?(text||'Richtig!')+(gain?' +'+gain:''):'',requeued:requeued};
-  vs.promptShown=cur.prompt;vs.dirLabel=cur.dirLabel;
+  vs.promptShown=cur.prompt;vs.dirLabel=cur.dirLabel;vs.fbCard={c:card,s:cur.set};
   vs.phase='fb';ui.focus=true;render();
 }
 function vCheck(){
@@ -1189,7 +1287,7 @@ document.addEventListener('click',function(ev){
     case 'savename':{const v=($('nm').value||'').trim();if(v)state.name=v;else state.nameSkipped=true;save();render();break;}
     case 'vset':ui.sid=t.dataset.s;go('vset');break;
     case 'vdir':state.vdir=t.dataset.d;save();render();break;
-    case 'vstart':startVocab(t.dataset.s,!!t.dataset.f);break;
+    case 'vstart':startVocab(t.dataset.s,!!t.dataset.f,!!t.dataset.n);break;
     case 'vnew':ui.edit={id:'',name:'',lang:'en',text:'',err:''};ui.confirmDel=false;view='vedit';window.scrollTo(0,0);render();break;
     case 'vedit':{const s=getSet(t.dataset.s);ui.edit={id:s.id,name:s.name,lang:s.lang,text:s.cards.map(function(c){return c.fx+' = '+c.de;}).join('\n'),err:''};ui.confirmDel=false;view='vedit';window.scrollTo(0,0);render();break;}
     case 'vedback':go(ui.edit&&ui.edit.id?'vset':'vocab');break;
@@ -1202,10 +1300,10 @@ document.addEventListener('click',function(ev){
         const s=getSet(e.id),old={};
         s.cards.forEach(function(c){old[c.fx+'|'+c.de]=c;});
         s.name=name;s.lang=e.lang;
-        s.cards=p.cards.map(function(c){const o=old[c.fx+'|'+c.de];return o||{id:uid(),fx:c.fx,de:c.de,box:1,due:0};});
+        s.cards=p.cards.map(function(c){const o=old[c.fx+'|'+c.de];if(o){['ipa','ex','nt'].forEach(function(k){if(c[k])o[k]=c[k];});return o;}return mkCard(c);});
         ui.sid=s.id;save();go('vset');
       }else{
-        const s={id:uid(),name:name,lang:e.lang,builtin:false,cards:p.cards.map(function(c){return {id:uid(),fx:c.fx,de:c.de,box:1,due:0};})};
+        const s={id:uid(),name:name,lang:e.lang,builtin:false,cards:p.cards.map(mkCard)};
         state.sets.push(s);ui.sid=s.id;save();go('vset');
       }
       break;}
@@ -1216,6 +1314,17 @@ document.addEventListener('click',function(ev){
     case 'vhint':{const vs=ui.vs;const alt=String(vs.cur.answer).split(/[\/;]/)[0].trim();vs.hint=alt.slice(0,1)+' …';vs.hinted=true;vs.keep=$('ans').value;ui.focus=true;render();break;}
     case 'vskip':vFinish(false);break;
     case 'vnext':vNext();break;
+    case 'vintronext':{
+      const vs=ui.vs;
+      if(vs.ii<vs.intro.length-1){vs.ii++;}
+      else{vs.intro.forEach(function(x){const f=findCard(x.cid);if(f)delete f.c.u;});save();view='vsess';}
+      window.scrollTo(0,0);ui.focus=true;render();break;}
+    case 'vintroback':{const vs=ui.vs;if(vs.ii>0){vs.ii--;window.scrollTo(0,0);render();}break;}
+    case 'say':{
+      const f=findCard(t.dataset.c);if(!f)break;
+      if(t.dataset.w==='s')speak(String(f.c.ex||'').replace(/\*/g,''),f.s.lang==='fr'?'fr-FR':'en-GB',0.85);
+      else speak(spokenWord(f.c),f.s.lang==='fr'?'fr-FR':'en-GB',0.8);
+      break;}
     case 'vend':go(ui.vs&&ui.vs.examId?'home':'vocab');break;
     case 'mstart':startMath(t.dataset.t);break;
     case 'mcheck':mCheck();break;
@@ -1255,7 +1364,7 @@ document.addEventListener('click',function(ev){
       const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
     case 'reset':ui.confirmReset=true;render();break;
     case 'resetno':ui.confirmReset=false;render();break;
-    case 'resetyes':state=defaultState();save();ui={};go('home');break;
+    case 'resetyes':state=migrate(defaultState());save();ui={};go('home');break;
   }
 });
 document.addEventListener('change',function(ev){

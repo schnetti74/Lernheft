@@ -114,6 +114,16 @@ label.lab{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
 .nav button{flex:1;font:inherit;font-weight:700;font-size:15px;min-height:50px;border:0;border-radius:12px;background:transparent;color:var(--muted);cursor:pointer}
 .nav button[aria-current="page"]{background:var(--mark);color:var(--mark-ink)}
 .err{color:var(--bad);font-weight:700;font-size:15px}
+.tilebox{display:flex;flex-direction:column;gap:0;min-width:0}
+.tilebox .tile{flex:1}
+.tilebox .link{text-align:left;font-size:15px;min-height:40px;padding:6px 4px}
+.rule{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.rule h3{font-size:17px;margin-bottom:4px}
+.merke{background:var(--tipbg);border-radius:12px;padding:12px 14px;font-weight:600}
+.exs{display:flex;flex-direction:column;gap:8px}
+.exs .st{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.exs .st b{color:var(--accent)}
+details.tips summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
 .chks{display:flex;flex-direction:column;gap:8px}
 .chk{display:flex;gap:12px;align-items:center;min-height:48px;padding:6px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-weight:600;cursor:pointer}
 .chk input{width:22px;height:22px;accent-color:var(--accent);flex:none;margin:0}
@@ -521,10 +531,9 @@ function parseLines(text){
   const cards=[];let skipped=0;
   String(text).split(/\r?\n/).forEach(function(line){
     if(!line.trim())return;
-    let i=line.indexOf('=');
-    if(i<0)i=line.indexOf('\t');
-    if(i<0){skipped++;return;}
-    const fx=line.slice(0,i).trim(),de=line.slice(i+1).trim();
+    const mm=/=|\t|\s[\u2013\u2014-]\s/.exec(line);
+    if(!mm){skipped++;return;}
+    const fx=line.slice(0,mm.index).trim(),de=line.slice(mm.index+mm[0].length).trim();
     if(!fx||!de){skipped++;return;}
     cards.push({fx:fx,de:de});
   });
@@ -544,7 +553,7 @@ function quotaToday(startRemaining,daysLeft){
   const phase=daysLeft<=2?'repeat':'build';
   if(startRemaining<=0)return {phase:phase,quota:phase==='repeat'?8:0};
   const q=Math.ceil(startRemaining/Math.max(1,daysLeft-1));
-  return {phase:phase,quota:Math.max(5,Math.min(60,q))};
+  return {phase:phase,quota:Math.max(5,Math.min(30,q))};
 }
 // ==LOGIC-END==
 
@@ -558,19 +567,23 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
 const uid=()=>Math.random().toString(36).slice(2,9);
 
-const EN_SAMPLE=['to borrow = ausleihen (von jmd.)','to lend = verleihen','homework = Hausaufgaben','detention = Nachsitzen','to forget = vergessen','to remember = sich erinnern / sich merken','neighbour = Nachbar / Nachbarin','to invite = einladen','dangerous = gefährlich','lonely = einsam','through = durch','during = während','ago = vor (zeitlich)','yesterday = gestern','usually = normalerweise','to carry = tragen','quiet = ruhig / leise','boring = langweilig','expensive = teuer','cheap = billig','to win = gewinnen','to lose = verlieren'];
-const FR_SAMPLE=['la maison = das Haus',"l'école (f.) = die Schule",'le professeur = der Lehrer','le livre = das Buch','le cahier = das Heft','la trousse = das Federmäppchen','le sac = die Tasche','le copain = der Freund / der Kumpel','la famille = die Familie','le frère = der Bruder','la sœur = die Schwester','le chat = die Katze / der Kater','le chien = der Hund','manger = essen','boire = trinken','habiter = wohnen','parler = sprechen','regarder = anschauen / ansehen',"aujourd'hui = heute",'demain = morgen','hier = gestern','toujours = immer','souvent = oft','beaucoup = viel / sehr'];
 
-function makeSet(name,lang,lines,builtin){
-  return {id:uid(),name:name,lang:lang,builtin:!!builtin,cards:parseLines(lines.join('\n')).cards.map(function(c){return {id:uid(),fx:c.fx,de:c.de,box:1,due:0};})};
-}
 function defaultState(){
-  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[makeSet('Englisch, Beispielwörter','en',EN_SAMPLE,true),makeSet('Französisch, Beispielwörter','fr',FR_SAMPLE,true)],math:{},exams:[]};
+  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink']};
+}
+function migrate(st){
+  const gone=new Set();
+  st.sets=(st.sets||[]).filter(function(x){if(x.builtin){gone.add(x.id);return false;}return true;});
+  if(gone.size){
+    st.exams=(st.exams||[]).map(function(e){if(e.subj!=='math')e.sets=(e.sets||[]).filter(function(id){return !gone.has(id);});return e;}).filter(function(e){return e.subj==='math'||(e.sets||[]).length>0;});
+  }
+  if(!Array.isArray(st.hiddenTopics))st.hiddenTopics=[];
+  return st;
 }
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){const s=JSON.parse(raw);return Object.assign(defaultState(),s);}
+    if(raw){const s=JSON.parse(raw);return migrate(Object.assign(defaultState(),s));}
   }catch(e){}
   return defaultState();
 }
@@ -594,6 +607,7 @@ function streak(){
 const levelInfo=function(){return {lvl:Math.floor(state.points/150)+1,into:state.points%150};};
 const mstat=function(id){if(!state.math[id])state.math[id]={level:1,clean:0,fail:0};return state.math[id];};
 const getSet=function(id){return state.sets.find(function(s){return s.id===id;});};
+const visibleTopics=()=>TOPICS.filter(t=>state.hiddenTopics.indexOf(t.id)<0);
 const getExam=id=>state.exams.find(e=>e.id===id);
 const examDays=e=>daysUntil(e.date,new Date());
 const examDoneToday=e=>(e.prog&&e.prog[dkey()])||0;
@@ -652,8 +666,8 @@ function home(){
     '</div>'+
     examBlock()+
     '<div class="tiles">'+
-      '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(due?due+' Karten warten auf dich':'Heute ist alles wiederholt')+'</span></button>'+
-      '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">'+TOPICS.length+' Themen, mit Tipps</span></button>'+
+      '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(!state.sets.length?'Lege deine erste Liste an':due?due+' Karten warten auf dich':'Heute ist alles wiederholt')+'</span></button>'+
+      '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">'+visibleTopics().length+' Themen, mit Tipps</span></button>'+
     '</div>'+
     '<div class="row" style="gap:20px"><button class="link" data-a="go" data-v="exams">Arbeit eintragen</button><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
   '</div>';
@@ -662,11 +676,11 @@ function home(){
 function vocabList(){
   const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
   return topBar()+'<div class="stack"><h1>Vokabeln</h1>'+
-    (due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten üben ('+due+')</button>':'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>')+
+    (!state.sets.length?'<div class="card stack"><h3>Noch keine Liste</h3><p class="muted">Lege eine Liste an und trage die W\u00F6rter aus dem Buch ein. Eine Zeile pro Wort, zum Beispiel: to borrow = ausleihen</p></div>':due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten üben ('+due+')</button>':'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>')+
     '<div class="list">'+state.sets.map(function(s){
       return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
     }).join('')+'</div>'+
-    '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+
+    '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+vocabTips()+
   '</div>';
 }
 
@@ -690,7 +704,7 @@ function vocabEdit(){
     '<div><label class="lab" for="ename">Name der Liste</label><input id="ename" class="input" maxlength="40" value="'+esc(e.name)+'" placeholder="z. B. Unit 3"></div>'+
     '<div><label class="lab" for="elang">Sprache</label><select id="elang" class="select"><option value="en"'+(e.lang==='en'?' selected':'')+'>Englisch</option><option value="fr"'+(e.lang==='fr'?' selected':'')+'>Französisch</option></select></div>'+
     '<div><label class="lab" for="etext">Wörter, eine pro Zeile</label><textarea id="etext" class="area" spellcheck="false" placeholder="to borrow = ausleihen\nla maison = das Haus">'+esc(e.text)+'</textarea>'+
-    '<p class="muted small" style="margin-top:6px">Links das Fremdwort, rechts die deutsche Bedeutung, getrennt mit =. Mehrere Bedeutungen trennst du mit /.</p></div>'+
+    '<p class="muted small" style="margin-top:6px">Links das Fremdwort, rechts die deutsche Bedeutung, getrennt mit = (Tab oder Gedankenstrich gehen auch). Mehrere Bedeutungen trennst du mit /.</p></div>'+
     (e.err?'<p class="err">'+esc(e.err)+'</p>':'')+
     '<button class="btn block" data-a="vsave">Speichern</button>'+
     (e.id?(ui.confirmDel?'<div class="fb bad stack" style="gap:10px">Liste mit allem Lernfortschritt wirklich löschen?<div class="row"><button class="btn danger small" data-a="vdelyes">Ja, löschen</button><button class="btn ghost small" data-a="vdelno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="vdel">Liste löschen</button>'):'')+
@@ -726,8 +740,8 @@ function vocabResult(){
 }
 
 function mathList(){
-  return topBar()+'<div class="stack"><div><h1>Mathe</h1><p class="muted">Bei jeder Aufgabe gibt es zwei Tipps. Die Aufgaben werden schwerer, wenn du sicher bist.</p></div>'+
-    '<div class="tiles">'+TOPICS.map(function(t){return '<button class="tile" data-a="mstart" data-t="'+t.id+'"><span class="t">'+t.name+'</span><span class="s">'+t.sub+'</span>'+pips(mstat(t.id).level)+'</button>';}).join('')+'</div>'+
+  return topBar()+'<div class="stack"><div><h1>Mathe</h1><p class="muted">Bei jeder Aufgabe gibt es zwei Tipps. Die Aufgaben werden schwerer, wenn du sicher bist. Wenn du ein Thema nicht verstehst, lies zuerst die Erkl\u00E4rung.</p></div>'+
+    '<div class="tiles">'+visibleTopics().map(function(t){return '<div class="tilebox"><button class="tile" data-a="mstart" data-t="'+t.id+'"><span class="t">'+t.name+'</span><span class="s">'+t.sub+'</span>'+pips(mstat(t.id).level)+'</button><button class="link" data-a="xopen" data-t="'+t.id+'">Erkl\u00E4rung lesen</button></div>';}).join('')+'</div>'+
     '<button class="btn block" data-a="mstart" data-t="mix">Mix aus allen Themen</button></div>';
 }
 
@@ -737,7 +751,7 @@ function mathSession(){
   const showKeys=it.kind==='lin'||(typeof it.ans==='number'&&it.ans<0)||it.pre==='x =';
   const keys=it.kind==='lin'?[MINUS,'+','x',',']:[MINUS,','];
   let out='<div class="stack" style="gap:16px"><div class="row between"><button class="link" data-a="mend">✕ Beenden</button><span class="muted small">'+m.solved+' gelöst · '+m.pts+' Punkte</span></div>'+examLine(m.examId)+
-    '<div class="card paper stack"><div class="row"><span class="badge">'+esc(tName)+'</span><span class="badge">Stufe '+it.level+'</span></div><div class="q"><span>'+esc(it.q)+'</span></div></div>';
+    '<div class="card paper stack"><div class="row"><span class="badge">'+esc(tName)+'</span><span class="badge">Stufe '+it.level+'</span>'+(it.review?'<span class="badge">Wiederholung</span>':'')+'</div><div class="q"><span>'+esc(it.q)+'</span></div></div>';
   for(let i=0;i<m.tips;i++)out+='<div class="tip"><b>Tipp '+(i+1)+'.</b> '+esc(it.tips[i])+'</div>';
   if(m.phase==='done'){
     if(m.result==='solved'){
@@ -745,12 +759,13 @@ function mathSession(){
     }else{
       out+='<div class="fb info"><b>So geht es:</b> '+esc(it.sol)+(m.lvlmsg?'<br><br>'+esc(m.lvlmsg):'')+'</div>';
     }
+    if(m.result!=='solved')out+=explBtn(it.topicId,true);
     out+='<button class="btn block" id="nextbtn" data-a="mnext">Nächste Aufgabe</button></div>';
     return out;
   }
   out+='<div class="stack" style="gap:10px"><div class="ansrow">'+(it.pre?'<span class="pre">'+esc(it.pre)+'</span>':'')+'<input id="ans" class="input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="'+(showKeys||it.kind==='lin'?'text':'decimal')+'" aria-label="Deine Antwort" value="'+esc(m.keep||'')+'">'+(it.unit?'<span class="unit">'+esc(it.unit)+'</span>':'')+'</div>'+
     (showKeys?keysRow(keys):'')+(m.msg?'<div class="fb bad">'+esc(m.msg)+'</div>':'')+'</div>'+
-    '<div class="row"><button class="btn" style="flex:1" data-a="mcheck">Prüfen</button><button class="btn ghost" data-a="mtip"'+(m.tips>=2?' disabled':'')+'>Tipp'+(m.tips<2?' ('+(m.tips+1)+'/2)':'')+'</button><button class="btn ghost" data-a="msol">Lösung</button></div></div>';
+    '<div class="row"><button class="btn" style="flex:1" data-a="mcheck">Prüfen</button><button class="btn ghost" data-a="mtip"'+(m.tips>=2?' disabled':'')+'>Tipp'+(m.tips<2?' ('+(m.tips+1)+'/2)':'')+'</button><button class="btn ghost" data-a="msol">Lösung</button></div>'+explBtn(it.topicId,m.attempts>=2)+'</div>';
   return out;
 }
 
@@ -758,8 +773,9 @@ function settings(){
   return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="home">← Start</button><h1>Einstellungen</h1></div>'+
     '<div><label class="lab" for="sname">Name</label><input id="sname" class="input" maxlength="24" value="'+esc(state.name)+'"></div>'+
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
+    '<div><p class="lab" style="margin-bottom:6px">Mathe-Themen, die angezeigt werden</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" class="settop" value="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div><p class="small muted" style="margin-top:6px">Ausgeblendete Themen bleiben gespeichert und kommen zur\u00FCck, wenn du sie wieder ausw\u00E4hlst.</p></div>'+(ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
-    '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen werden nur in diesem Browser auf diesem Gerät gespeichert. Auf einem anderen Gerät startet die App bei null. Die zwei Beispiellisten kannst du bearbeiten oder löschen und durch die Wörter aus dem Schulbuch ersetzen.</p></div>'+
+    '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen werden nur in diesem Browser auf diesem Gerät gespeichert. Auf einem anderen Gerät startet die App bei null. Eigene Vokabellisten legst du unter Vokabeln an.</p><p class="small muted" style="margin-top:8px">So ist die App aufgebaut: Antworten selbst aus dem Kopf holen statt nur lesen, Wiederholen in wachsenden Abst\u00E4nden (Karteikasten), Tipps vor der L\u00F6sung, Erkl\u00E4rungen mit Beispielen zum Mitrechnen, gemischte Themen und kurze Einheiten. Sie ersetzt keinen Unterricht. Wenn ein Thema gar nicht ankommt, hilft ein kurzes Gespr\u00E4ch mit der Lehrkraft oder mit dir oft mehr als weiteres \u00DCben.</p></div>'+
     (ui.confirmReset?'<div class="fb bad stack" style="gap:10px">Alles zurücksetzen? Punkte, Serie und Listen sind danach weg.<div class="row"><button class="btn danger small" data-a="resetyes">Ja, zurücksetzen</button><button class="btn ghost small" data-a="resetno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="reset">Alles zurücksetzen</button>')+
   '</div>';
 }
@@ -812,7 +828,7 @@ function examsView(){
   }
   let stoff;
   if(x.subj==='math'){
-    stoff='<div class="chks">'+TOPICS.map(t=>'<label class="chk"><input type="checkbox" class="extop" value="'+t.id+'"'+(x.topics.indexOf(t.id)>=0?' checked':'')+'>'+t.name+'</label>').join('')+'</div>';
+    stoff='<div class="chks">'+visibleTopics().map(t=>'<label class="chk"><input type="checkbox" class="extop" value="'+t.id+'"'+(x.topics.indexOf(t.id)>=0?' checked':'')+'>'+t.name+'</label>').join('')+'</div>';
   }else{
     const ls=state.sets.filter(st=>st.lang===x.subj);
     stoff=ls.length?'<div class="chks">'+ls.map(st=>'<label class="chk"><input type="checkbox" class="exset" value="'+st.id+'"'+(x.sets.indexOf(st.id)>=0?' checked':'')+'>'+esc(st.name)+' ('+st.cards.length+' Wörter)</label>').join('')+'</div>':'<div class="fb info">Lege zuerst unter Vokabeln eine Liste für dieses Fach an.</div>';
@@ -824,6 +840,163 @@ function examsView(){
     '<div><p class="lab" style="margin-bottom:6px">Stoff</p>'+stoff+'</div>'+
     (x.err?'<p class="err">'+esc(x.err)+'</p>':'')+
     '<button class="btn block" data-a="exsave">Arbeit speichern</button></div></div>';
+}
+
+const EXPL={
+neg:{
+ intro:'Positive Zahlen sind wie Guthaben auf deinem Konto, negative Zahlen wie Schulden. Auf dem Thermometer ist es über 0 warm (plus) und unter 0 kalt (minus). Mit diesem Bild kannst du jede Regel selbst nachvollziehen.',
+ rules:[
+  {h:'Plus mit gleichen Vorzeichen',p:'Haben beide Zahlen dasselbe Vorzeichen, rechnest du die Zahlen zusammen und das Vorzeichen bleibt. Zwei Schulden ergeben mehr Schulden: (−3) + (−4) = **−7**.'},
+  {h:'Plus mit verschiedenen Vorzeichen',p:'Ziehe die kleinere Zahl von der größeren ab. Das Vorzeichen hat die Zahl, die weiter von 0 entfernt ist. Beispiel (−8) + 5: 8 − 5 = 3, und die 8 ist negativ, also **−3**.'},
+  {h:'Minus rechnen',p:'Eine Zahl abziehen ist dasselbe wie ihre Gegenzahl addieren. 4 − (−3) = 4 + 3 = **7**. Schulden wegnehmen macht dich reicher.'},
+  {h:'Mal und geteilt',p:'Gleiche Vorzeichen ergeben Plus, verschiedene ergeben Minus. (−3) · (−4) = 12, (−3) · 4 = −12, (−12) : (−3) = 4. Rechne erst ohne Vorzeichen und setze das Vorzeichen danach.'},
+  {h:'Punkt vor Strich',p:'Das gilt auch mit negativen Zahlen. Rechne zuerst Mal und Geteilt, dann Plus und Minus.'}
+ ],
+ examples:[
+  {task:'−7 + 4',steps:['Die Vorzeichen sind verschieden: −7 und +4.','Ziehe die kleinere Zahl von der größeren ab: 7 − 4 = 3.','Die 7 ist negativ und stärker. Das Ergebnis ist negativ: **−3**.']},
+  {task:'5 − (−6)',steps:['Minus vor einer negativen Zahl wird zu Plus. Aus 5 − (−6) wird 5 + 6.','5 + 6 = **11**.']},
+  {task:'−4 · (−5) + 3',steps:['Punkt vor Strich: Rechne zuerst −4 · (−5).','Gleiche Vorzeichen ergeben Plus: 4 · 5 = 20, also +20.','Jetzt 20 + 3 = **23**.']}
+ ],
+ mistakes:['−5 − 3 ist −8 und nicht −2. Du startest bei −5 und gehst noch 3 Schritte nach links.','Bei „Minus mal Minus“ nicht das Plus vergessen: Das Ergebnis ist positiv.'],
+ merke:'Gleiche Vorzeichen ergeben Plus, verschiedene ergeben Minus. Das gilt beim Malnehmen und beim Teilen.'
+},
+rv:{
+ intro:'Manche Rechnungen werden im Kopf viel leichter, wenn du die Reihenfolge änderst oder Klammern geschickt setzt. Die Zahlen bleiben gleich, nur dein Weg wird klüger. Wichtig: Das Vorzeichen gehört immer zu der Zahl, vor der es steht, und wandert mit.',
+ rules:[
+  {h:'Vertauschen (Kommutativgesetz)',p:'Bei Plus und bei Mal darfst du die Reihenfolge ändern. −4 + 11 − 6 = −4 + (−6) + 11 = **1**. Das Vorzeichen nimmst du mit.'},
+  {h:'Klammern setzen (Assoziativgesetz)',p:'Bei reinen Plus-Aufgaben oder reinen Mal-Aufgaben darfst du Klammern setzen oder weglassen. −26 · 25 · 4 = −26 · (25 · 4) = −26 · 100 = **−2600**.'},
+  {h:'Ausmultiplizieren (Distributivgesetz)',p:'a · (b + c) = a · b + a · c. Jeder Summand in der Klammer wird mit dem Faktor vor der Klammer multipliziert. Der Trick: Zahlen nah an 100 schreibst du als 100 plus oder minus eine kleine Zahl.'},
+  {h:'Ausklammern',p:'Kommt derselbe Faktor in zwei Produkten vor, schreibst du ihn einmal vor eine Klammer: −139 · 3 + (−139) · 7 = −139 · (3 + 7) = **−1390**.'},
+  {h:'Minusklammerregel',p:'Steht vor einer Klammer ein Minus, drehst du in der Klammer alle Vorzeichen um. −5 − (−5 + 2) = −5 + 5 − 2 = **−2**.'},
+  {h:'Reihenfolge der Rechenregeln',p:'Erst Klammern, dann Potenzen, dann Punkt vor Strich. 2 · (−3)² = 2 · 9 = 18.'},
+  {h:'Division',p:'Eine Summe darfst du Summand für Summand teilen: (27 + 30) : (−3) = 27 : (−3) + 30 : (−3) = −9 + (−10) = **−19**. Das geht nur, wenn die Summe vorn steht.'}
+ ],
+ examples:[
+  {task:'−28 + 43 + 57',steps:['Suche zwei Zahlen, die zusammen etwas Rundes ergeben: 43 + 57 = 100.','Bei Plus-Aufgaben darfst du Klammern setzen: −28 + (43 + 57).','−28 + 100 = **72**.']},
+  {task:'−23 · (100 − 1)',steps:['Multipliziere jeden Teil der Klammer mit −23: −23 · 100 und −23 · (−1).','−23 · 100 = −2300 und −23 · (−1) = +23.','−2300 + 23 = **−2277**.']},
+  {task:'−139 · 3 + (−139) · 7',steps:['Der Faktor −139 steht in beiden Produkten. Klammere ihn aus.','−139 · (3 + 7) = −139 · 10.','**−1390**.']},
+  {task:'8 − (3 − 5)',steps:['Minus vor der Klammer: Drehe alle Vorzeichen in der Klammer um.','Aus 8 − (3 − 5) wird 8 − 3 + 5.','8 − 3 + 5 = **10**.']}
+ ],
+ mistakes:['Bei der Minusklammer nur das erste Vorzeichen zu drehen. Du musst alle drehen.','Beim Ausmultiplizieren den zweiten Summanden zu vergessen.','12 : (2 + 4) ist nicht 12 : 2 + 12 : 4. Das Verteilen beim Teilen klappt nur, wenn die Summe durch eine Zahl geteilt wird.'],
+ merke:'Erst schauen, ob ein Trick hilft: runde Zahlen zusammenfassen, Klammer auflösen oder ausklammern. Dann rechnen.'
+},
+proz:{
+ intro:'Prozent heißt „von hundert“. 1 % ist ein Hundertstel, 50 % ist die Hälfte, 25 % ein Viertel. Bei jeder Aufgabe kommen drei Dinge vor: der Grundwert (das Ganze, 100 %), der Prozentsatz (die Prozent) und der Prozentwert (der Teil).',
+ rules:[
+  {h:'Der sichere Weg: erst 1 % ausrechnen',p:'1 % ist der Grundwert geteilt durch 100. Von 1 % aus kommst du immer weiter, ob du ein Vielfaches, den Prozentsatz oder das Ganze suchst.'},
+  {h:'Prozentwert gesucht',p:'1 % ausrechnen und mal den Prozentsatz nehmen.'},
+  {h:'Prozentsatz gesucht',p:'1 % ausrechnen und fragen, wie oft es in den Teil passt.'},
+  {h:'Grundwert gesucht',p:'Rechne aus, wie viel 1 % ist (Teil durch Prozentsatz), dann mal 100.'},
+  {h:'Rabatt und Steuer',p:'Rechne erst den Rabatt oder die Steuer in Euro aus. Beim Rabatt ziehst du ihn vom Preis ab, bei Steuer oder Aufschlag zählst du ihn dazu.'}
+ ],
+ examples:[
+  {task:'25 % von 80',steps:['1 % ausrechnen: 80 : 100 = 0,8.','Mal 25 nehmen: 25 · 0,8 = **20**.']},
+  {task:'15 von 60 Kindern. Wie viel Prozent?',steps:['1 % von 60 ist 60 : 100 = 0,6.','Wie oft passt 0,6 in 15? 15 : 0,6 = 25.','Das sind **25 %**.']},
+  {task:'15 sind 20 %. Wie groß ist das Ganze?',steps:['20 % sind 15. Also ist 1 % gleich 15 : 20 = 0,75.','Das Ganze sind 100 %: 0,75 · 100 = **75**.']},
+  {task:'Jacke für 80 €, 25 % Rabatt',steps:['25 % von 80 sind 20 € (wie im ersten Beispiel).','Das ist der Rabatt. Neuer Preis: 80 − 20 = **60 €**.']}
+ ],
+ mistakes:['Den Rabatt als neuen Preis zu nehmen. Du musst ihn noch vom Preis abziehen.','Das Ganze ist immer 100 %. Wer Teil und Ganzes vertauscht, bekommt falsche Ergebnisse.','Mach einen Überschlag: 50 % ist die Hälfte, 25 % ein Viertel, 10 % ein Zehntel.'],
+ merke:'Erst 1 % ausrechnen, dann weiter. Das klappt bei jeder Prozentaufgabe.'
+},
+gl:{
+ intro:'Eine Gleichung ist wie eine Waage im Gleichgewicht. Links und rechts muss immer gleich viel sein. Was du auf einer Seite machst, musst du auf der anderen Seite auch machen. Dein Ziel: x steht allein.',
+ rules:[
+  {h:'Das Gleichgewicht',p:'Du darfst auf beiden Seiten dasselbe rechnen. Dann bleibt die Gleichung wahr.'},
+  {h:'Das Gegenteil benutzen',p:'Plus und Minus sind Gegenteile, Mal und Geteilt auch. Bei x + 5 = 18 ziehst du auf beiden Seiten 5 ab.'},
+  {h:'Die Reihenfolge',p:'Erst Plus und Minus wegschaffen, dann Mal und Geteilt. Bei 3x + 4 = 19 zuerst die 4, dann die 3.'},
+  {h:'x auf beiden Seiten',p:'Zieh das kleinere x auf beiden Seiten ab, dann steht x nur noch auf einer Seite.'},
+  {h:'Probe machen',p:'Setze dein Ergebnis in die Gleichung ein. Stimmen beide Seiten, ist es richtig.'}
+ ],
+ examples:[
+  {task:'x + 5 = 18',steps:['Das Gegenteil von +5 ist −5. Ziehe auf beiden Seiten 5 ab.','x = **13**.','Probe: 13 + 5 = 18 stimmt.']},
+  {task:'3x + 4 = 19',steps:['Erst die 4 weg: auf beiden Seiten −4. Es bleibt 3x = 15.','Jetzt durch 3 teilen: x = **5**.','Probe: 3 · 5 + 4 = 19 stimmt.']},
+  {task:'6x + 2 = 2x + 14',steps:['x auf eine Seite: auf beiden Seiten −2x. Es bleibt 4x + 2 = 14.','Auf beiden Seiten −2: 4x = 12.','Durch 4 teilen: x = **3**.']},
+  {task:'3(x + 2) = 15',steps:['Teile beide Seiten durch 3. Es bleibt x + 2 = 5.','Auf beiden Seiten −2: x = **3**.']}
+ ],
+ mistakes:['Nur auf einer Seite zu rechnen. Beide Seiten müssen dasselbe bekommen.','Nur einen Teil zu teilen. Bei 3x + 4 = 19 musst du alles durch 3 teilen. Einfacher: erst die 4 wegschaffen.'],
+ merke:'Was links passiert, passiert rechts. Das Gegenteil macht das x frei.'
+},
+term:{
+ intro:'x ist ein Platzhalter für eine Zahl. 3x bedeutet 3 · x. Terme zusammenfassen ist wie Obst zählen: 3 Äpfel + 2 Äpfel sind 5 Äpfel. Aber 3 Äpfel + 2 Birnen bleiben 3 Äpfel und 2 Birnen.',
+ rules:[
+  {h:'Gleiches zusammenfassen',p:'Terme mit x kommen zu Termen mit x, Zahlen zu Zahlen. 3x + 2x = **5x**, aber 3x + 2 bleibt 3x + 2.'},
+  {h:'Vorzeichen mitnehmen',p:'Das Vorzeichen gehört zu dem Term rechts davon. In −8 − 8x − 2 + 6x sind die Terme −8, −8x, −2 und +6x.'},
+  {h:'x ohne Zahl',p:'x ist dasselbe wie 1x und −x dasselbe wie −1x.'},
+  {h:'Klammern auflösen',p:'Die Zahl vor der Klammer wird mit jedem Teil in der Klammer multipliziert: 4(3x + 2) = 12x + 8. Steht ein Minus vor der Klammer, drehst du alle Vorzeichen um.'}
+ ],
+ examples:[
+  {task:'6x − 9x − 8x',steps:['Alle Terme haben x. Rechne nur die Zahlen davor: 6 − 9 − 8 = −11.','Das x bleibt stehen: **−11x**.']},
+  {task:'−8 − 8x − 2 + 6x',steps:['Sortiere: Terme mit x sind −8x und +6x. Zahlen sind −8 und −2.','x-Terme: −8 + 6 = −2, also −2x.','Zahlen: −8 − 2 = −10.','Zusammen: **−2x − 10**.']},
+  {task:'4(3x + 2) − 2x',steps:['Löse die Klammer auf: 4 · 3x = 12x und 4 · 2 = 8.','Es steht da: 12x + 8 − 2x.','x-Terme: 12x − 2x = 10x. Ergebnis: **10x + 8**.']}
+ ],
+ mistakes:['3x + 2 ergibt nicht 5x. x-Terme und Zahlen darfst du nicht vermischen.','Bei der Klammer gilt der Faktor für alle Teile, nicht nur für den ersten.'],
+ merke:'Nur Gleiches zusammenfassen: x zu x und Zahl zu Zahl.'
+},
+zuo:{
+ intro:'Bei einer Zuordnung gehört zu jeder Zahl eine andere. Zum Beispiel Anzahl und Preis oder Helfer und Zeit. Es gibt zwei Arten: Je mehr, desto mehr (proportional), und je mehr, desto weniger (antiproportional).',
+ rules:[
+  {h:'Proportional: je mehr, desto mehr',p:'Doppelt so viele Hefte kosten doppelt so viel. Rechne erst auf 1 herunter (teilen) und dann auf die gesuchte Menge hoch (malnehmen).'},
+  {h:'Antiproportional: je mehr, desto weniger',p:'Doppelt so viele Maler brauchen halb so lange. Hier bleibt das Produkt gleich: Anzahl mal Zeit. Rechne es aus und teile durch die neue Anzahl.'},
+  {h:'Welche Art ist es?',p:'Frage dich: Wenn es doppelt so viele sind, wird das Ergebnis doppelt so groß (proportional) oder halb so groß (antiproportional)?'}
+ ],
+ examples:[
+  {task:'4 Hefte kosten 8 €. Wie viel kosten 16 Hefte?',steps:['Je mehr Hefte, desto mehr Geld: proportional.','Auf 1 Heft herunter: 8 € : 4 = 2 €.','Auf 16 Hefte hoch: 2 € · 16 = **32 €**.']},
+  {task:'3 Maler brauchen 12 Tage. Wie lange brauchen 6 Maler?',steps:['Je mehr Maler, desto weniger Tage: antiproportional.','Die Gesamtarbeit bleibt gleich: 3 · 12 = 36.','36 : 6 = **6 Tage**.']},
+  {task:'Mit 10 km/h braucht Mara 30 Minuten. Wie lange mit 15 km/h?',steps:['Schneller heißt weniger Zeit: antiproportional.','Tempo mal Zeit bleibt gleich: 10 · 30 = 300.','300 : 15 = **20 Minuten**.']}
+ ],
+ mistakes:['Proportional und antiproportional zu verwechseln. Mach den Sinn-Check: Mehr Maler und mehr Tage? Das kann nicht stimmen.','Beim Dreisatz die Rechenart zu vertauschen: Bei proportional teilst du zuerst, bei antiproportional malnimmst du zuerst.'],
+ merke:'Proportional: auf 1 teilen, dann mal. Antiproportional: erst mal, dann teilen.'
+},
+wink:{
+ intro:'Winkel messen wir in Grad (°). Ein voller Kreis hat 360°, eine gerade Linie 180°. Mit ein paar festen Regeln kannst du viele Winkel ausrechnen, ohne zu messen.',
+ rules:[
+  {h:'Dreieck',p:'Alle drei Winkel zusammen ergeben immer **180°**.'},
+  {h:'Gleichschenkliges Dreieck',p:'Die beiden Basiswinkel sind gleich groß. Der dritte Winkel sitzt an der Spitze.'},
+  {h:'Nebenwinkel',p:'Winkel, die auf einer Geraden nebeneinander liegen, ergeben zusammen 180°.'},
+  {h:'Scheitelwinkel',p:'Wenn sich zwei Geraden kreuzen, sind die gegenüberliegenden Winkel gleich groß.'},
+  {h:'Parallele Geraden',p:'Wird ein Paar paralleler Geraden von einer dritten geschnitten, sind Stufenwinkel (F-Form) gleich und Wechselwinkel (Z-Form) gleich.'}
+ ],
+ examples:[
+  {task:'Dreieck mit α = 77° und β = 47°. Wie groß ist γ?',steps:['Alle Winkel im Dreieck ergeben 180°.','77° + 47° = 124°.','180° − 124° = **56°**.']},
+  {task:'Gleichschenkliges Dreieck, Spitze 40°. Wie groß ist ein Basiswinkel?',steps:['Die beiden Basiswinkel sind gleich groß.','180° − 40° = 140° bleiben für beide zusammen.','140° : 2 = **70°** pro Basiswinkel.']},
+  {task:'Zwei Parallelen, α = 65°. β ist Wechselwinkel zu α, γ ist Nebenwinkel von β.',steps:['Wechselwinkel sind gleich groß: β = 65°.','Nebenwinkel ergeben zusammen 180°: γ = 180° − 65°.','γ = **115°**.']}
+ ],
+ mistakes:['Beim gleichschenkligen Dreieck zu vergessen, durch 2 zu teilen.','Nebenwinkel und Scheitelwinkel zu verwechseln: Scheitelwinkel sind gleich, Nebenwinkel ergeben 180°.'],
+ merke:'F- und Z-Winkel sind gleich groß. Nebenwinkel auf einer Geraden ergeben zusammen 180°.'
+}
+};
+const bx=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+function explBtn(tid,prom){
+  const t=TOPICS.find(x=>x.id===tid);
+  if(!t||!EXPL[tid])return '';
+  return '<button class="'+(prom?'btn ghost block':'link')+'" data-a="xopen" data-t="'+tid+'">Erklärung zu „'+esc(t.name)+'“ ansehen</button>';
+}
+function explainView(){
+  const id=ui.explTopic,E=EXPL[id],t=TOPICS.find(x=>x.id===id);
+  if(!E||!t){view='math';return mathList();}
+  const sh=ui.explShown||(ui.explShown={});
+  const fromS=ui.explFrom==='msess';
+  let h=topBar()+'<div class="stack"><div><button class="link" data-a="xback">← '+(fromS?'Zurück zur Aufgabe':'Alle Themen')+'</button><h1>'+esc(t.name)+'</h1></div>';
+  h+='<div class="card stack"><h2>Worum geht es?</h2><p>'+bx(E.intro)+'</p></div>';
+  h+='<div class="stack"><h2>Die Regeln</h2>'+E.rules.map(r=>'<div class="rule"><h3>'+esc(r.h)+'</h3><p>'+bx(r.p)+'</p></div>').join('')+'</div>';
+  h+='<div class="stack"><h2>Beispiele zum Mitrechnen</h2><p class="muted small">Rechne zuerst selbst im Heft. Decke die Schritte erst danach auf und vergleiche.</p>'+E.examples.map((ex,i)=>{
+    const n=Math.min(ex.steps.length,sh[i]||0);
+    const steps=ex.steps.slice(0,n).map((st,k)=>'<div class="st"><b>Schritt '+(k+1)+'.</b> '+bx(st)+'</div>').join('');
+    return '<div class="card stack" style="gap:10px"><div class="q" style="font-size:20px"><span>'+esc(ex.task)+'</span></div>'+(steps?'<div class="exs">'+steps+'</div>':'')+(n<ex.steps.length?'<button class="btn ghost small" data-a="xnext" data-i="'+i+'">'+(n===0?'Ersten Schritt zeigen':'Nächster Schritt')+'</button>':'<p class="small muted">Alle Schritte aufgedeckt.</p>')+'</div>';
+  }).join('')+'</div>';
+  h+='<div class="stack"><h2>Typische Fehler</h2>'+E.mistakes.map(m=>'<div class="rule"><p>'+bx(m)+'</p></div>').join('')+'</div>';
+  h+='<div class="merke">Merke: '+bx(E.merke)+'</div>';
+  h+='<button class="btn block" data-a="xpractice">'+(fromS?'Weiter mit der Aufgabe':'Jetzt üben')+'</button></div>';
+  return h;
+}
+function vocabTips(){
+  return '<details class="card tips"><summary>So lernst du Vokabeln richtig gut</summary><div class="stack" style="gap:8px;margin-top:8px">'+
+    '<p><b>Lieber oft und kurz:</b> 10 Minuten jeden Tag bringen mehr als eine Stunde am Abend vor der Arbeit.</p>'+
+    '<p><b>Erst denken, dann nachschauen:</b> Versuche das Wort aus dem Kopf. Genau die Anstrengung bringt es ins Gedächtnis.</p>'+
+    '<p><b>Sprich laut:</b> Sag Wort und Bedeutung laut. Bei Französisch den Artikel (le, la) immer mitlernen.</p>'+
+    '<p><b>Mach einen Satz:</b> Ein eigener kurzer Satz mit dem Wort bleibt besser hängen als das einzelne Wort.</p>'+
+    '<p><b>Eselsbrücke:</b> Verbinde das Wort mit einem Bild oder einem ähnlich klingenden deutschen Wort.</p>'+
+    '<p><b>Fehlerkarten kommen oft wieder:</b> Das ist Absicht. Genau diese Wörter brauchen dich am meisten.</p></div></details>';
 }
 
 /* ---------- Render ---------- */
@@ -840,9 +1013,10 @@ function render(){
   else if(view==='msess')html=mathSession();
   else if(view==='settings')html=settings();
   else if(view==='exams')html=examsView();
+  else if(view==='explain')html=explainView();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings'||view==='exams')?'home':(view==='math'||view==='msess')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='exams')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
@@ -850,7 +1024,7 @@ function render(){
   ui.focus=false;
 }
 function go(v){
-  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;
+  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';
   view=v;window.scrollTo(0,0);render();
 }
 
@@ -901,9 +1075,13 @@ function vFinish(ok,text){
   if(ok){
     gain=vs.hinted?5:vs.retried?6:10;
     if(!q.failed){
-      vs.correct++;if(vs.examId)addExamProg(vs.examId);
-      card.box=Math.min(5,card.box+1);
-      card.due=todayStart()+INTERVAL[card.box]*DAY;
+      if(!vs.hinted&&!vs.retried){
+        vs.correct++;if(vs.examId)addExamProg(vs.examId);
+        card.box=Math.min(5,card.box+1);
+        card.due=todayStart()+INTERVAL[card.box]*DAY;
+      }else{
+        card.due=todayStart()+DAY;
+      }
     }
     bump();
   }else{
@@ -935,15 +1113,15 @@ function vNext(){
 
 /* ---------- Mathe: Ablauf ---------- */
 function newItem(tid,prevQ){
-  let id;
-  if(tid==='mix')id=pick(TOPICS).id;
+  let id,review=false;
+  if(tid==='mix')id=pick(visibleTopics()).id;
   else if(tid.indexOf('exam:')===0){const e=getExam(tid.slice(5));const ids=e?examTopics(e):[];id=ids.length?pickTopic(ids):pick(TOPICS).id;}
-  else id=tid;
+  else{id=tid;if(Math.random()<0.25){const others=visibleTopics().filter(function(x){return x.id!==tid&&((state.math[x.id]||{}).n||0)>=5;});if(others.length){id=pick(others).id;review=true;}}}
   const t=TOPICS.find(function(x){return x.id===id;});
   const lvl=mstat(id).level;
   let it,tries=0;
   do{it=t.gen(lvl);tries++;}while(prevQ&&it.q===prevQ&&tries<6);
-  it.topicId=id;it.level=lvl;
+  it.topicId=id;it.level=lvl;it.review=review;
   return it;
 }
 function startMath(tid){
@@ -962,13 +1140,16 @@ function mCheck(){
     const st=mstat(it.topicId);
     m.gain=Math.max(3,15-5*m.tips-(m.attempts>1?3:0));
     m.pts+=m.gain;m.solved++;addPts(m.gain);bump();if(m.examId)addExamProg(m.examId);
+    st.n=(st.n||0)+1;
     const clean=m.tips===0&&m.attempts===1;
     st.fail=0;
     if(clean){st.clean++;if(st.clean>=3&&st.level<3){st.level++;st.clean=0;m.lvlmsg='Stark. Weiter geht es mit Stufe '+st.level+'.';}}
     else st.clean=0;
     m.phase='done';m.result='solved';save();ui.focus=true;render();return;
   }
-  m.msg=m.attempts>=2?'Noch nicht richtig. Ein Tipp kann helfen.':'Noch nicht richtig. Rechne in Ruhe noch einmal nach.';
+  const pv=it.kind==='num'?parseNum(val):null;
+  const slip=pv!==null&&it.ans!==0&&Math.abs(pv+it.ans)<0.005;
+  m.msg=slip?'Fast. Die Zahl stimmt, aber das Vorzeichen nicht. Pr\u00FCfe Plus und Minus noch einmal.':(m.attempts>=2?'Noch nicht richtig. Ein Tipp oder die Erkl\u00E4rung kann helfen.':'Noch nicht richtig. Rechne in Ruhe noch einmal nach.');
   ui.focus=true;render();
 }
 function mSol(){
@@ -1042,6 +1223,16 @@ document.addEventListener('click',function(ev){
     case 'msol':ui.ms.keep='';mSol();break;
     case 'mnext':mNext();break;
     case 'mend':go(ui.ms&&ui.ms.examId?'home':'math');break;
+    case 'xopen':{
+      if(view==='msess'&&ui.ms){const inp=$('ans');if(inp)ui.ms.keep=inp.value;}
+      ui.explFrom=view==='msess'?'msess':'math';ui.explTopic=t.dataset.t;ui.explShown={};
+      view='explain';window.scrollTo(0,0);render();break;}
+    case 'xnext':{const i=parseInt(t.dataset.i,10);ui.explShown[i]=(ui.explShown[i]||0)+1;render();break;}
+    case 'xback':{view=ui.explFrom==='msess'?'msess':'math';window.scrollTo(0,0);ui.focus=view==='msess';render();break;}
+    case 'xpractice':{
+      if(ui.explFrom==='msess'){view='msess';window.scrollTo(0,0);ui.focus=true;render();}
+      else startMath(ui.explTopic);
+      break;}
     case 'examgo':{
       const e=getExam(t.dataset.e);if(!e)break;
       if(e.subj==='math'){if(!examTopics(e).length){go('exams');break;}startMath('exam:'+e.id);}
@@ -1057,7 +1248,11 @@ document.addEventListener('click',function(ev){
     case 'exdel':readEx();ui.delEx=t.dataset.e;render();break;
     case 'exdelno':readEx();ui.delEx=null;render();break;
     case 'exdelyes':state.exams=state.exams.filter(e=>e.id!==t.dataset.e);ui.delEx=null;save();render();break;
-    case 'ssave':{const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
+    case 'ssave':{
+      const sel=Array.prototype.map.call(document.querySelectorAll('.settop:checked'),function(i){return i.value;});
+      if(!sel.length){ui.setErr='Mindestens ein Mathe-Thema muss sichtbar bleiben.';render();break;}
+      ui.setErr='';state.hiddenTopics=TOPICS.map(function(t){return t.id;}).filter(function(id){return sel.indexOf(id)<0;});
+      const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
     case 'reset':ui.confirmReset=true;render();break;
     case 'resetno':ui.confirmReset=false;render();break;
     case 'resetyes':state=defaultState();save();ui={};go('home');break;

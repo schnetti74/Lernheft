@@ -605,6 +605,53 @@ const PRESETS=[{"id":"a3u1-a1","name":"U1 · Part A · 1 (S. 227)","cards":[["th
 function defaultState(){
   return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink'],presetSeen:[]};
 }
+function buildPreset(p,pc){
+  return {id:p.id,name:p.name,lang:'en',builtin:false,preset:true,cards:p.cards.map(function(c,i){
+    const id=p.id+'-'+i,o={id:id,fx:c[0],de:c[1],box:1,due:0,u:1};
+    if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];
+    const q=pc&&pc[id];
+    if(q){o.box=q[0];o.due=q[1];if(!q[2])delete o.u;}
+    return o;
+  })};
+}
+/* Sicherungs-Code: Fortschritt als Text, damit er auf ein anderes Gerät mitgenommen werden kann */
+const B64=function(x){return btoa(unescape(encodeURIComponent(x)));};
+const UN64=function(x){return decodeURIComponent(escape(atob(x)));};
+function makeCode(){
+  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,ps:[],pc:{},us:[]};
+  state.sets.forEach(function(s){
+    const pd=s.preset&&PRESETS.find(function(p){return p.id===s.id;});
+    const same=pd&&pd.cards.length===s.cards.length&&s.cards.every(function(c,i){return c.id===s.id+'-'+i&&c.fx===pd.cards[i][0]&&c.de===pd.cards[i][1];});
+    if(same){
+      o.ps.push(s.id);
+      s.cards.forEach(function(c){if(c.box!==1||c.due!==0||!c.u)o.pc[c.id]=[c.box,c.due,c.u?1:0];});
+    }else o.us.push(s);
+  });
+  return 'LH1:'+B64(JSON.stringify(o));
+}
+function parseCode(txt){
+  const t=String(txt||'').replace(/\s+/g,'');
+  if(t.indexOf('LH1:')!==0)return null;
+  try{
+    const o=JSON.parse(UN64(t.slice(4)));
+    if(!o||o.v!==1||typeof o.points!=='number'||typeof o.days!=='object'||!Array.isArray(o.ps||[])||!Array.isArray(o.us||[]))return null;
+    return o;
+  }catch(e){return null;}
+}
+function stateFromCode(o){
+  const st=defaultState();
+  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
+  st.presetSeen=Array.isArray(o.presetSeen)?o.presetSeen:[];
+  st.sets=[];
+  (o.ps||[]).forEach(function(id){const p=PRESETS.find(function(x){return x.id===id;});if(p)st.sets.push(buildPreset(p,o.pc||{}));});
+  (o.us||[]).forEach(function(x){st.sets.push(x);});
+  return migrate(st);
+}
+function copyText(txt,ta,cb){
+  const fb=function(){let ok=false;try{if(ta){ta.focus();ta.select();ta.setSelectionRange(0,txt.length);}ok=document.execCommand('copy');}catch(e){}cb(ok);};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){cb(true);},fb);return;}}catch(e){}
+  fb();
+}
 function migrate(st){
   const gone=new Set();
   st.sets=(st.sets||[]).filter(function(x){if(x.builtin){gone.add(x.id);return false;}return true;});
@@ -616,11 +663,7 @@ function migrate(st){
   PRESETS.forEach(function(p){
     if(st.presetSeen.indexOf(p.id)>=0)return;
     st.presetSeen.push(p.id);
-    st.sets.push({id:p.id,name:p.name,lang:'en',builtin:false,preset:true,cards:p.cards.map(function(c,i){
-      const o={id:p.id+'-'+i,fx:c[0],de:c[1],box:1,due:0,u:1};
-      if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];
-      return o;
-    })});
+    st.sets.push(buildPreset(p));
   });
   return st;
 }
@@ -730,6 +773,7 @@ function keysRow(chars){
 function home(){
   const c=todayCount(),g=state.goal,C=213.6,dash=C*Math.min(1,c/g);
   const li=levelInfo(),st=streak();
+  const fl=ui.flash||'';ui.flash='';
   const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
   const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   let first='';
@@ -737,7 +781,7 @@ function home(){
     first='<div class="card stack"><div><label class="lab" for="nm">Wie heißt du?</label><input id="nm" class="input" autocomplete="given-name" maxlength="24"></div><button class="btn" data-a="savename">Los geht’s</button></div>';
   }
   return topBar()+'<div class="stack">'+
-    '<div><p class="eyebrow">Hallo'+(state.name?' '+esc(state.name):'')+'</p><h1>Was lernst du heute?</h1></div>'+first+
+    '<div><p class="eyebrow">Hallo'+(state.name?' '+esc(state.name):'')+'</p><h1>Was lernst du heute?</h1></div>'+first+(fl?'<div class="fb good">'+esc(fl)+'</div>':'')+
     '<div class="card row" style="flex-wrap:nowrap;gap:16px">'+
       '<svg class="ring" width="84" height="84" viewBox="0 0 84 84" role="img" aria-label="'+c+' von '+g+' Aufgaben heute"><circle class="r-bg" cx="42" cy="42" r="34"/><circle class="r-fg" cx="42" cy="42" r="34" stroke-dasharray="'+dash+' '+C+'" transform="rotate(-90 42 42)"/><text x="42" y="50" text-anchor="middle">'+c+'</text></svg>'+
       '<div class="stack" style="gap:8px;min-width:0;flex:1"><div><h3>'+(c>=g?'Tagesziel geschafft':'Heute '+c+' von '+g+' richtig')+'</h3><p class="muted small">'+(st>0?st+(st===1?' Tag':' Tage')+' in Folge geschafft':'Schaffe '+g+' richtige Antworten und starte eine Serie.')+'</p></div>'+
@@ -868,9 +912,28 @@ function settings(){
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
     '<div><p class="lab" style="margin-bottom:6px">Mathe-Themen, die angezeigt werden</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" class="settop" value="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div><p class="small muted" style="margin-top:6px">Ausgeblendete Themen bleiben gespeichert und kommen zur\u00FCck, wenn du sie wieder ausw\u00E4hlst.</p></div>'+(ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
+    '<button class="btn ghost block" data-a="go" data-v="backup">Fortschritt sichern oder auf ein anderes Gerät übertragen</button>'+
     '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen werden nur in diesem Browser auf diesem Gerät gespeichert. Auf einem anderen Gerät startet die App bei null. Eigene Vokabellisten legst du unter Vokabeln an.</p><p class="small muted" style="margin-top:8px">So ist die App aufgebaut: Antworten selbst aus dem Kopf holen statt nur lesen, Wiederholen in wachsenden Abst\u00E4nden (Karteikasten), Tipps vor der L\u00F6sung, Erkl\u00E4rungen mit Beispielen zum Mitrechnen, gemischte Themen und kurze Einheiten. Sie ersetzt keinen Unterricht. Wenn ein Thema gar nicht ankommt, hilft ein kurzes Gespr\u00E4ch mit der Lehrkraft oder mit dir oft mehr als weiteres \u00DCben.</p></div>'+
     (ui.confirmReset?'<div class="fb bad stack" style="gap:10px">Alles zurücksetzen? Punkte, Serie und Listen sind danach weg.<div class="row"><button class="btn danger small" data-a="resetyes">Ja, zurücksetzen</button><button class="btn ghost small" data-a="resetno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="reset">Alles zurücksetzen</button>')+
   '</div>';
+}
+
+function backupView(){
+  const b=ui.bk||(ui.bk={code:'',imp:'',err:'',pend:null,msg:''});
+  const p=b.pend;
+  return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="settings">← Einstellungen</button><h1>Fortschritt sichern</h1></div>'+
+    '<p class="muted">Mit dem Code nimmst du deinen Stand auf ein anderes Gerät mit oder stellst ihn nach einem Gerätewechsel wieder her. Schicke dir den Code zum Beispiel per Nachricht oder Mail.</p>'+
+    '<div class="card stack"><h3>1. Code erzeugen</h3>'+
+      (state.lastBackup?'<p class="small muted">Zuletzt gesichert: '+dateLong(state.lastBackup)+'</p>':'<p class="small muted">Bisher noch nicht gesichert.</p>')+
+      '<button class="btn block" data-a="bkmake">Code erzeugen</button>'+
+      (b.code?'<textarea id="bkcode" class="area" readonly spellcheck="false" aria-label="Sicherungscode" style="min-height:120px;font-size:13px;word-break:break-all">'+esc(b.code)+'</textarea><button class="btn ghost block" data-a="bkcopy">Code kopieren</button>':'')+
+      (b.msg?'<div class="fb info">'+esc(b.msg)+'</div>':'')+
+    '</div>'+
+    '<div class="card stack"><h3>2. Auf diesem Gerät wiederherstellen</h3>'+
+      '<textarea id="bkin" class="area" spellcheck="false" aria-label="Code einfügen" placeholder="Code hier einfügen" style="min-height:120px;font-size:13px;word-break:break-all">'+esc(b.imp)+'</textarea>'+
+      (b.err?'<p class="err">'+esc(b.err)+'</p>':'')+
+      (p?'<div class="fb info stack" style="gap:10px"><div>Gefunden: <b>'+esc(p.name||'ohne Namen')+'</b>, '+p.points+' Punkte, '+Object.keys(p.days||{}).length+' Lerntage. Der Stand auf diesem Gerät wird dadurch ersetzt.</div><div class="row"><button class="btn small" data-a="bkgo">Ja, wiederherstellen</button><button class="btn ghost small" data-a="bkno">Abbrechen</button></div></div>':'<button class="btn block" data-a="bkcheck">Code prüfen</button>')+
+    '</div></div>';
 }
 
 function examLine(id){
@@ -1106,11 +1169,12 @@ function render(){
   else if(view==='math')html=mathList();
   else if(view==='msess')html=mathSession();
   else if(view==='settings')html=settings();
+  else if(view==='backup')html=backupView();
   else if(view==='exams')html=examsView();
   else if(view==='explain')html=explainView();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings'||view==='exams')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
@@ -1118,7 +1182,7 @@ function render(){
   ui.focus=false;
 }
 function go(v){
-  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';
+  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';if(v==='backup')ui.bk={code:'',imp:'',err:'',pend:null,msg:''};
   view=v;window.scrollTo(0,0);render();
 }
 
@@ -1269,6 +1333,7 @@ function insertAtCaret(ch){
   inp.value=inp.value.slice(0,s)+ch+inp.value.slice(e);
   const p=s+ch.length;inp.focus();try{inp.setSelectionRange(p,p);}catch(x){}
 }
+function bkRead(){const b=ui.bk;if(!b)return;const t=$('bkin');if(t)b.imp=t.value;}
 function readEdit(){
   const e=ui.edit;
   e.name=($('ename')||{value:e.name}).value;
@@ -1362,6 +1427,22 @@ document.addEventListener('click',function(ev){
       if(!sel.length){ui.setErr='Mindestens ein Mathe-Thema muss sichtbar bleiben.';render();break;}
       ui.setErr='';state.hiddenTopics=TOPICS.map(function(t){return t.id;}).filter(function(id){return sel.indexOf(id)<0;});
       const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
+    case 'bkmake':{bkRead();ui.bk.code=makeCode();ui.bk.msg='';state.lastBackup=dkey();save();render();break;}
+    case 'bkcopy':{
+      bkRead();
+      copyText(ui.bk.code,$('bkcode'),function(ok){ui.bk.msg=ok?'Code kopiert. Füge ihn jetzt zum Beispiel in eine Nachricht an dich ein.':'Kopieren hat nicht geklappt. Tippe in das Feld, markiere alles und kopiere es von Hand.';render();});
+      break;}
+    case 'bkcheck':{
+      bkRead();const o=parseCode(ui.bk.imp);
+      if(!o){ui.bk.err='Das ist kein gültiger Code. Kopiere ihn vollständig, von LH1: bis zum Ende.';ui.bk.pend=null;}
+      else{ui.bk.err='';ui.bk.pend=o;}
+      render();break;}
+    case 'bkgo':{
+      if(!(ui.bk&&ui.bk.pend))break;
+      try{state=stateFromCode(ui.bk.pend);save();ui.flash='Dein Stand ist wiederhergestellt.';go('home');}
+      catch(e){ui.bk.err='Der Code lässt sich nicht einlesen.';ui.bk.pend=null;render();}
+      break;}
+    case 'bkno':{bkRead();ui.bk.pend=null;ui.bk.err='';render();break;}
     case 'reset':ui.confirmReset=true;render();break;
     case 'resetno':ui.confirmReset=false;render();break;
     case 'resetyes':state=migrate(defaultState());save();ui={};go('home');break;

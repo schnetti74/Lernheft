@@ -4,8 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lernheft">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#0D6B8A">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>:root{color-scheme:light}body{margin:0;font-family:system-ui,sans-serif}[hidden]{display:none!important}img{max-width:100%}</style>
+<script>window.LH_PWA=true;</script>
 <title>Lernheft</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Nunito+Sans:wght@400;600;700&display=swap">
 <style>
@@ -674,7 +681,107 @@ function load(){
   }catch(e){}
   return migrate(defaultState());
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+function save(quiet){
+  if(!quiet)state.ts=Date.now();
+  try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
+  if(!quiet)syncSoon();
+}
+
+/* ---------- Online-Abgleich (Firebase, nur REST, ohne Bibliothek) ----------
+   Der Stand liegt als Sicherungs-Code in einem Firestore-Dokument. Der Dokumentname ist der geheime
+   Verbindungscode. Wer ihn nicht kennt, kann nichts lesen. Neuester Stand gewinnt. */
+const FB={apiKey:"AIzaSyDngeRdtNoyXt12xZeRxyt6E9KSZLVO_fI",projectId:"lernheft-a75cb"};
+const SYNCKEY='lernheft_sync';
+let sy=(function(){try{return JSON.parse(localStorage.getItem(SYNCKEY)||'{}')||{};}catch(e){return {};}})();
+const sySave=function(){try{localStorage.setItem(SYNCKEY,JSON.stringify(sy));}catch(e){}};
+const syncAvail=function(){return !!(window.LH_PWA&&FB.apiKey&&FB.projectId);};
+const syncOn=function(){return syncAvail()&&!!sy.code;};
+let syBusy=false,syTimer=null;
+const BUSYVIEWS=['vsess','vintro','msess','vedit','exams','backup','sync'];
+function newSyncCode(){
+  const a='abcdefghjkmnpqrstuvwxyz23456789',r=new Uint8Array(24);let c='';
+  (window.crypto||window.msCrypto).getRandomValues(r);
+  for(let i=0;i<24;i++)c+=a[r[i]%a.length];
+  return c;
+}
+const fmtCode=function(c){return String(c).replace(/(.{4})(?=.)/g,'$1-');};
+function errText(e){
+  const m=String(e&&e.message||e);
+  if(e instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(m))return 'keine Verbindung zum Internet';
+  if(/403|401/.test(m))return 'Zugriff abgelehnt (Firebase-Regeln prüfen)';
+  if(/auth/.test(m))return 'Anmeldung fehlgeschlagen (ist die anonyme Anmeldung in Firebase an?)';
+  return 'Fehler ('+m+')';
+}
+function syFetch(url,opt){
+  return fetch(url,opt).then(function(r){return r.text().then(function(t){let j=null;try{j=t?JSON.parse(t):null;}catch(e){}return {ok:r.ok,status:r.status,json:j};});});
+}
+function syToken(){
+  const now=Date.now();
+  if(sy.idToken&&sy.exp>now+60000)return Promise.resolve(sy.idToken);
+  const store=function(idt,ref,exp){sy.idToken=idt;sy.refresh=ref;sy.exp=Date.now()+(parseInt(exp,10)||3600)*1000;sySave();return idt;};
+  const signUp=function(){
+    return syFetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(FB.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:'{"returnSecureToken":true}'}).then(function(r){
+      if(!r.ok||!r.json||!r.json.idToken)throw new Error('auth '+r.status);
+      return store(r.json.idToken,r.json.refreshToken,r.json.expiresIn);
+    });
+  };
+  if(sy.refresh){
+    return syFetch('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(FB.apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+encodeURIComponent(sy.refresh)}).then(function(r){
+      if(r.ok&&r.json&&r.json.id_token)return store(r.json.id_token,r.json.refresh_token||sy.refresh,r.json.expires_in);
+      return signUp();
+    });
+  }
+  return signUp();
+}
+const syDocUrl=function(){return 'https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(FB.projectId)+'/databases/(default)/documents/lernheft_sync/'+encodeURIComponent(sy.code);};
+function syGet(){
+  return syToken().then(function(tok){return syFetch(syDocUrl(),{headers:{Authorization:'Bearer '+tok}});}).then(function(r){
+    if(r.status===404)return {none:true};
+    if(!r.ok||!r.json||!r.json.fields)throw new Error('get '+r.status);
+    const f=r.json.fields;
+    return {code:f.code&&f.code.stringValue,ts:(f.ts&&parseInt(f.ts.integerValue,10))||0};
+  });
+}
+function syPut(code,ts){
+  return syToken().then(function(tok){
+    return syFetch(syDocUrl()+'?updateMask.fieldPaths=code&updateMask.fieldPaths=ts',{method:'PATCH',keepalive:true,headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({fields:{code:{stringValue:code},ts:{integerValue:String(ts)}}})});
+  }).then(function(r){if(!r.ok)throw new Error('put '+r.status);});
+}
+function syncPush(){
+  if(!syncOn())return Promise.resolve();
+  if(!state.ts){state.ts=Date.now();save(true);}
+  const ts=state.ts;
+  return syPut(makeCode(),ts).then(function(){sy.pushed=ts;sy.last=Date.now();sy.err='';sySave();});
+}
+function syncPull(force){
+  if(!syncOn()||syBusy)return Promise.resolve(false);
+  syBusy=true;
+  return syGet().then(function(r){
+    if(r.none)return syncPush().then(function(){return false;});
+    const local=state.ts||0;
+    if(r.ts>local){
+      if(!force&&BUSYVIEWS.indexOf(view)>=0)return false;
+      const o=parseCode(r.code);if(!o)throw new Error('code');
+      state=stateFromCode(o);state.ts=r.ts;save(true);
+      sy.pushed=r.ts;sy.last=Date.now();sy.err='';sySave();
+      if(['home','vocab','math','settings','sync'].indexOf(view)<0)view='home';
+      return true;
+    }
+    if(local>r.ts)return syncPush().then(function(){return false;});
+    sy.last=Date.now();sy.err='';sySave();
+    return false;
+  }).catch(function(e){sy.err=errText(e);sySave();return false;}).then(function(v){syBusy=false;return v;});
+}
+function syncSoon(){
+  if(!syncOn())return;
+  clearTimeout(syTimer);
+  syTimer=setTimeout(function(){syTimer=null;syncPush().catch(function(e){sy.err=errText(e);sySave();});},2500);
+}
+const isLocalEmpty=function(){
+  return state.points===0&&!Object.keys(state.days).length&&!state.exams.length&&state.sets.every(function(x){return x.preset&&x.cards.every(function(c){return c.u;});});
+};
+const freshSy=function(){return {err:'',msg:'',pend:null,busy:false,confirmOff:false};};
+
 
 let state=load();
 let view='home';
@@ -778,7 +885,7 @@ function home(){
   const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   let first='';
   if(!state.name&&!state.nameSkipped){
-    first='<div class="card stack"><div><label class="lab" for="nm">Wie heißt du?</label><input id="nm" class="input" autocomplete="given-name" maxlength="24"></div><button class="btn" data-a="savename">Los geht’s</button></div>';
+    first='<div class="card stack"><div><label class="lab" for="nm">Wie heißt du?</label><input id="nm" class="input" autocomplete="given-name" maxlength="24"></div><button class="btn" data-a="savename">Los geht’s</button>'+(syncAvail()&&!syncOn()?'<button class="link" data-a="go" data-v="sync">Schon auf einem anderen Gerät gelernt? Verbinden</button>':'')+'</div>';
   }
   return topBar()+'<div class="stack">'+
     '<div><p class="eyebrow">Hallo'+(state.name?' '+esc(state.name):'')+'</p><h1>Was lernst du heute?</h1></div>'+first+(fl?'<div class="fb good">'+esc(fl)+'</div>':'')+
@@ -912,10 +1019,73 @@ function settings(){
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
     '<div><p class="lab" style="margin-bottom:6px">Mathe-Themen, die angezeigt werden</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" class="settop" value="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div><p class="small muted" style="margin-top:6px">Ausgeblendete Themen bleiben gespeichert und kommen zur\u00FCck, wenn du sie wieder ausw\u00E4hlst.</p></div>'+(ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
-    '<button class="btn ghost block" data-a="go" data-v="backup">Fortschritt sichern oder auf ein anderes Gerät übertragen</button>'+
+    (syncAvail()?'<button class="btn ghost block" data-a="go" data-v="sync">Auf mehreren Geräten lernen (Online-Abgleich)</button>':'')+
+    '<button class="btn ghost block" data-a="go" data-v="backup">Fortschritt als Code sichern</button>'+
     '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen werden nur in diesem Browser auf diesem Gerät gespeichert. Auf einem anderen Gerät startet die App bei null. Eigene Vokabellisten legst du unter Vokabeln an.</p><p class="small muted" style="margin-top:8px">So ist die App aufgebaut: Antworten selbst aus dem Kopf holen statt nur lesen, Wiederholen in wachsenden Abst\u00E4nden (Karteikasten), Tipps vor der L\u00F6sung, Erkl\u00E4rungen mit Beispielen zum Mitrechnen, gemischte Themen und kurze Einheiten. Sie ersetzt keinen Unterricht. Wenn ein Thema gar nicht ankommt, hilft ein kurzes Gespr\u00E4ch mit der Lehrkraft oder mit dir oft mehr als weiteres \u00DCben.</p></div>'+
-    (ui.confirmReset?'<div class="fb bad stack" style="gap:10px">Alles zurücksetzen? Punkte, Serie und Listen sind danach weg.<div class="row"><button class="btn danger small" data-a="resetyes">Ja, zurücksetzen</button><button class="btn ghost small" data-a="resetno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="reset">Alles zurücksetzen</button>')+
+    (ui.confirmReset?'<div class="fb bad stack" style="gap:10px">Alles zurücksetzen? Punkte, Serie und Listen sind danach weg.'+(syncOn()?' Das gilt auch für alle verbundenen Geräte.':'')+'<div class="row"><button class="btn danger small" data-a="resetyes">Ja, zurücksetzen</button><button class="btn ghost small" data-a="resetno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="reset">Alles zurücksetzen</button>')+
   '</div>';
+}
+
+function syStatus(){
+  if(sy.err)return 'Der letzte Abgleich hat nicht geklappt ('+sy.err+'). Die App versucht es später noch einmal.';
+  if(!sy.last)return 'Noch nicht abgeglichen.';
+  const d=new Date(sy.last);
+  return 'Zuletzt abgeglichen: '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+' Uhr, '+d.getDate()+'.'+(d.getMonth()+1)+'.';
+}
+function syncView(){
+  const u=ui.sy||(ui.sy=freshSy());
+  const head=topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="settings">← Einstellungen</button><h1>Auf mehreren Geräten lernen</h1></div>';
+  if(!syncAvail())return head+'<div class="fb info">Der Online-Abgleich ist in dieser Version nicht eingerichtet.</div></div>';
+  const msg=(u.msg?'<div class="fb good">'+esc(u.msg)+'</div>':'')+(u.err?'<p class="err">'+esc(u.err)+'</p>':'');
+  if(syncOn()){
+    const link=location.href.split('#')[0]+'#sync='+sy.code;
+    return head+
+      '<div class="card stack"><h3>Online-Abgleich ist an</h3><p class="muted small">'+esc(syStatus())+'</p>'+
+        '<button class="btn small" data-a="synow"'+(u.busy?' disabled':'')+'>'+(u.busy?'Gleiche ab …':'Jetzt abgleichen')+'</button></div>'+msg+
+      '<div class="card stack"><h3>Weiteres Gerät verbinden</h3>'+
+        '<p class="muted">Öffne diesen Link auf dem anderen Gerät, zum Beispiel am Handy. Danach ist es verbunden. Schicke den Link nur dir selbst, denn wer ihn hat, kommt an den Lernstand.</p>'+
+        '<textarea id="sylink" class="area" readonly spellcheck="false" aria-label="Verbindungslink" style="min-height:90px;font-size:13px;word-break:break-all">'+esc(link)+'</textarea>'+
+        '<button class="btn ghost block" data-a="sycopy">Link kopieren</button>'+
+        '<p class="small muted">Alternativ gibst du auf dem anderen Gerät diesen Code ein: <b style="user-select:all">'+esc(fmtCode(sy.code))+'</b></p></div>'+
+      '<div class="card stack"><h3>Auf diesem Gerät ausschalten</h3>'+
+        (u.confirmOff?'<div class="fb bad stack" style="gap:10px">Dieses Gerät wird getrennt. Der Stand bleibt online erhalten und die anderen Geräte laufen weiter.<div class="row"><button class="btn danger small" data-a="syoffyes">Ja, trennen</button><button class="btn ghost small" data-a="syoffno">Abbrechen</button></div></div>':'<button class="btn ghost danger small" data-a="syoff">Abgleich ausschalten</button>')+
+      '</div></div>';
+  }
+  const p=u.pend;
+  return head+
+    '<p class="muted">Mit dem Online-Abgleich ist dein Lernstand auf Handy, iPad und anderen Geräten derselbe, ohne dass du etwas tun musst.</p>'+msg+
+    '<div class="card stack"><h3>Zum ersten Mal einschalten</h3><p class="muted">Dieses Gerät lädt seinen Stand hoch. Danach verbindest du die anderen Geräte.</p>'+
+      '<button class="btn block" data-a="syon"'+(u.busy?' disabled':'')+'>'+(u.busy?'Einen Moment …':'Online-Abgleich einschalten')+'</button></div>'+
+    '<div class="card stack"><h3>Mit einem anderen Gerät verbinden</h3><p class="muted">Du hast schon einen Code oder Link von einem anderen Gerät? Gib den Code hier ein.</p>'+
+      '<input id="syin" class="input" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="abcd-efgh-…" aria-label="Code">'+
+      (p?'<div class="fb info stack" style="gap:10px"><div>Online gefunden: <b>'+esc(p.o.name||'ohne Namen')+'</b>, '+p.o.points+' Punkte, '+Object.keys(p.o.days||{}).length+' Lerntage.'+(isLocalEmpty()?'':' Dieses Gerät hat schon eigenen Fortschritt ('+state.points+' Punkte).')+'</div><div class="row"><button class="btn small" data-a="sytake">Online-Stand übernehmen</button>'+(isLocalEmpty()?'':'<button class="btn ghost small" data-a="sykeep">Diesen Stand behalten</button>')+'<button class="btn ghost small" data-a="syno">Abbrechen</button></div></div>':'<button class="btn ghost block" data-a="syjoin"'+(u.busy?' disabled':'')+'>Verbinden</button>')+
+    '</div></div>';
+}
+function syJoin(raw,auto){
+  const u=ui.sy||(ui.sy=freshSy());
+  const cand=String(raw||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(cand.length<20){u.err='Der Code ist zu kurz. Er hat 24 Zeichen.';render();return;}
+  u.err='';u.msg='';u.busy=true;render();
+  const prev=sy.code;sy.code=cand;
+  syGet().then(function(r){
+    sy.code=prev;u.busy=false;
+    if(r.none){u.err='Zu diesem Code gibt es noch keinen Stand. Prüfe die Eingabe.';return;}
+    const o=parseCode(r.code);
+    if(!o){u.err='Der Online-Stand lässt sich nicht lesen.';return;}
+    u.pend={code:cand,ts:r.ts,o:o};
+    if(auto&&isLocalEmpty())syTake();
+  }).catch(function(e){sy.code=prev;u.busy=false;u.err='Das hat nicht geklappt: '+errText(e)+'.';}).then(function(){if(view==='sync')render();});
+}
+function syTake(){
+  const p=ui.sy.pend;
+  state=stateFromCode(p.o);state.ts=p.ts;save(true);
+  sy.code=p.code;sy.pushed=p.ts;sy.last=Date.now();sy.err='';sySave();
+  ui.flash='Verbunden. Dein Lernstand ist da.';ui.sy=null;go('home');
+}
+function syKeep(){
+  const u=ui.sy,p=u.pend;
+  sy.code=p.code;state.ts=Date.now();save(true);u.busy=true;render();
+  syncPush().then(function(){ui.flash='Verbunden. Dieser Stand liegt jetzt online.';ui.sy=null;go('home');}).catch(function(e){sy.code='';sySave();u.busy=false;u.err='Das hat nicht geklappt: '+errText(e)+'.';render();});
 }
 
 function backupView(){
@@ -1170,11 +1340,12 @@ function render(){
   else if(view==='msess')html=mathSession();
   else if(view==='settings')html=settings();
   else if(view==='backup')html=backupView();
+  else if(view==='sync')html=syncView();
   else if(view==='exams')html=examsView();
   else if(view==='explain')html=explainView();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup'||view==='sync')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
@@ -1182,7 +1353,7 @@ function render(){
   ui.focus=false;
 }
 function go(v){
-  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';if(v==='backup')ui.bk={code:'',imp:'',err:'',pend:null,msg:''};
+  ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';if(v==='backup')ui.bk={code:'',imp:'',err:'',pend:null,msg:''};if(v==='sync')ui.sy=freshSy();
   view=v;window.scrollTo(0,0);render();
 }
 
@@ -1443,6 +1614,26 @@ document.addEventListener('click',function(ev){
       catch(e){ui.bk.err='Der Code lässt sich nicht einlesen.';ui.bk.pend=null;render();}
       break;}
     case 'bkno':{bkRead();ui.bk.pend=null;ui.bk.err='';render();break;}
+    case 'syon':{
+      const u=ui.sy;u.err='';u.msg='';u.busy=true;render();
+      sy.code=newSyncCode();
+      syncPush().then(function(){u.msg='Online-Abgleich ist an. Verbinde jetzt die anderen Geräte.';}).catch(function(e){sy.code='';u.err='Das hat nicht geklappt: '+errText(e)+'.';}).then(function(){u.busy=false;sySave();if(view==='sync')render();});
+      break;}
+    case 'syjoin':{const el=$('syin');syJoin(el?el.value:'',false);break;}
+    case 'sytake':{syTake();break;}
+    case 'sykeep':{syKeep();break;}
+    case 'syno':{ui.sy.pend=null;ui.sy.err='';render();break;}
+    case 'synow':{
+      const u=ui.sy;u.busy=true;u.msg='';u.err='';render();
+      syBusy=false;
+      syncPull(true).then(function(){u.busy=false;if(sy.err)u.err=sy.err;else u.msg='Abgeglichen.';if(view==='sync')render();});
+      break;}
+    case 'sycopy':{
+      copyText($('sylink').value,$('sylink'),function(ok){ui.sy.msg=ok?'Link kopiert. Füge ihn zum Beispiel in eine Nachricht an dich ein.':'Kopieren hat nicht geklappt. Tippe in das Feld, markiere alles und kopiere es von Hand.';render();});
+      break;}
+    case 'syoff':{ui.sy.confirmOff=true;render();break;}
+    case 'syoffno':{ui.sy.confirmOff=false;render();break;}
+    case 'syoffyes':{clearTimeout(syTimer);sy.code='';sySave();ui.sy=freshSy();ui.sy.msg='Dieses Gerät ist getrennt.';render();break;}
     case 'reset':ui.confirmReset=true;render();break;
     case 'resetno':ui.confirmReset=false;render();break;
     case 'resetyes':state=migrate(defaultState());save();ui={};go('home');break;
@@ -1465,9 +1656,28 @@ document.addEventListener('keydown',function(ev){
     ev.preventDefault();const v=(ev.target.value||'').trim();if(v)state.name=v;else state.nameSkipped=true;save();render();
   }
 });
+(function(){
+  if(!syncAvail())return;
+  const m=/^#sync=([A-Za-z0-9-]+)/.exec(location.hash||'');
+  if(!m)return;
+  try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}
+  if(sy.code)return;
+  view='sync';ui.sy=freshSy();
+  setTimeout(function(){syJoin(m[1],true);},0);
+})();
+document.addEventListener('visibilitychange',function(){
+  if(!syncOn())return;
+  if(document.visibilityState==='visible'){syncPull().then(function(ch){if(ch)render();});}
+  else if(syTimer){clearTimeout(syTimer);syTimer=null;syncPush().catch(function(){});}
+});
+window.addEventListener('online',function(){if(syncOn())syncPull().then(function(ch){if(ch)render();});});
 render();
+syncPull().then(function(ch){if(ch)render();});
 })();
 </script>
 
+<script>
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
 </body>
 </html>

@@ -125,6 +125,21 @@ label.lab{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
 .exq p{font-size:18px;min-width:0}
 .exq b{background:linear-gradient(transparent 55%,var(--mark) 55%)}
 .nt{background:var(--tipbg);border-radius:10px;padding:10px 12px;font-size:16px}
+.mn{background:var(--tipbg);border-radius:10px;padding:10px 12px;font-size:16px}
+.mn p{margin:2px 0 0}
+.opts{display:grid;gap:10px}
+.opt{font:inherit;font-weight:600;font-size:18px;text-align:left;min-height:54px;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.opt:hover,.opt:focus-visible{border-color:var(--accent)}
+.bdg{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.bdg.off{opacity:.5}
+.bdot{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent-ink);background:var(--accent)}
+.bdg.off .bdot{background:transparent;border-color:var(--line)}
+.wk{display:flex;gap:8px;align-items:flex-end}
+.wkc{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--muted)}
+.wkc b{color:var(--ink)}
+.wkb{width:100%;height:70px;background:var(--bg);border-radius:6px;display:flex;align-items:flex-end;overflow:hidden}
+.wkb i{display:block;width:100%;background:var(--line)}
+.wkc.hit .wkb i{background:var(--good)}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
 .nav[hidden]{display:none!important}
 .nav .in{display:flex;gap:6px;width:100%;max-width:640px}
@@ -608,16 +623,16 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 
 
 /* Access G9 Band 3, Unit 1: Beispielsätze und Hinweise sind eigene Texte */
-const PRESETS=[{"id":"a3u1-a1","name":"U1 · Part A · 1 (S. 227)","cards":[["the best thing about ...","das Beste an ...","","The *best thing about* my school is the sports hall.",""],["huge","riesig / sehr groß","'hju:dʒ","The giraffe house at the zoo is *huge*.",""],["as soon as","sobald / sowie","əz 'su:n əz","I'll text you *as soon as* I get home.",""],["cathedral","Kathedrale / Dom","kə'θi:drəl","We climbed to the top of St Paul's *Cathedral*.","Betonung auf der 2. Silbe: ca-THE-dral. Französisch: la cathédrale."],["palace","Palast / Schloss","'pæləs","Buckingham *Palace* is a famous building in London.","Betonung auf der 1. Silbe: PA-lace. Französisch: le palais."],["Welsh","walisisch","welʃ","My friend from Cardiff speaks *Welsh* at home.",""],["to reply (to)","antworten (auf) / erwidern / entgegnen","rɪ'plaɪ","I *replied* to Mia's message right away.",""],["Europe","Europa","'jʊərəp","France and Spain are countries in *Europe*.","Das E am Anfang spricht man wie 'ju', anders als im Deutschen."],["western","westlich / West-","'westən","Wales is in the *western* part of Britain.",""],["I see.","Aha! / Verstehe.","","The bus is late. – *I see.* Then let's wait.",""],["lift","Fahrstuhl / Aufzug","lɪft","The *lift* is broken, so we take the stairs.","Im amerikanischen Englisch sagt man 'elevator'."],["amazing","erstaunlich / unglaublich","ə'meɪzɪŋ","The view from the London Eye is *amazing*.",""],["quite","ziemlich / völlig / ganz","kwaɪt","It's *quite* cold today, so I'll wear a jacket.","'quite' kann 'ziemlich' oder 'ganz' heißen: 'not quite good enough' = nicht ganz gut genug."],["queue","Schlange / Reihe","kju:","There was a long *queue* in front of the cinema.","Gemeint ist eine Schlange wartender Menschen, nicht das Tier."],["How do you know ...?","Woher weißt du ...? / Woher kennst du ...?","","*How do you know* Jack? – We play football together.",""],["post","Posting / Blog-Eintrag","pəʊst","I wrote a new *post* for our class blog.","Im Blog ist es ein Eintrag, nicht die Post, die der Briefträger bringt."],["to add (to)","hinzufügen / ergänzen / addieren (zu)","æd","*Add* two spoons of sugar to the milk.",""]]},{"id":"a3u1-a2","name":"U1 · Part A · 2 (S. 227)","cards":[["carnival","Karneval / Fasching","'kɑ:nɪvl","We watched the *carnival* parade in Notting Hill.","Im Englischen sind mit 'carnival' allgemein bunte Umzüge mit Musik, Tanz und Festwagen gemeint, nicht nur Fasching."],["test","Test","test","We have an English *test* on Friday.",""],["to be into (sth.)","etwas mögen / auf etwas stehen","","My sister *is into* K-pop.","Umgangssprache: auf etwas stehen, etwas richtig gern mögen."],["to enjoy","genießen","ɪn'dʒɔɪ","I really *enjoyed* the film last night.","Oft auch: Spaß an etwas haben, zum Beispiel 'I enjoy swimming.'"],["by the way","übrigens","baɪ ðə 'weɪ","*By the way*, did you do your homework?",""],["north","Norden / nördlich","nɔ:θ","Scotland is in the *north* of Britain.",""],["east","Osten / östlich","i:st","The sun rises in the *east*.",""],["south","Süden / südlich","saʊθ","Spain is *south* of France.",""],["west","Westen / westlich","west","The sun sets in the *west*.",""],["north-east","Nordosten","ˌnɔ:θ'i:st","Newcastle is in the *north-east* of England.",""],["south-east","Südosten","ˌsaʊθ'i:st","London is in the *south-east* of England.",""],["south-west","Südwesten","ˌsaʊθ'west","Cornwall is in the *south-west* of England.",""],["north-west","Nordwesten","ˌnɔ:θ'west","Liverpool is in the *north-west* of England.",""]]},{"id":"a3u1-a3","name":"U1 · Part A · 3 (S. 228)","cards":[["darkness","Dunkelheit / Finsternis","'dɑ:knəs","We walked home through the *darkness*.",""],["clue","Hinweis / Anhaltspunkt","klu:","The detective found a *clue* under the sofa.",""],["skyline","Skyline / Horizont","'skaɪlaɪn","You can see London's *skyline* from the river.",""],["false","falsch","fɔ:ls","London is the capital of France. – That's *false*!","Das Gegenteil ist 'true' (wahr)."],["to stay (at, with)","(vorübergehend) wohnen / übernachten (in, bei)","steɪ","We *stayed* with my grandma for the weekend.","'stay at a hotel' = im Hotel übernachten, 'stay with sb.' = bei jemandem wohnen."],["timetable","Fahrplan / Stundenplan","'taɪmteɪbl","Check the bus *timetable* before you leave.","Zwei Bedeutungen: Fahrplan und Stundenplan."],["restaurant","Restaurant","'restrɒnt","We had dinner in an Italian *restaurant*.","Das 'au' hört man kaum: 'res-tront'. Französisch: le restaurant."],["gallery","Galerie","'gæləri","The National *Gallery* has famous paintings.","Betonung auf der 1. Silbe: GAL-le-ry (im Deutschen liegt sie auf der letzten). Französisch: la galerie."],["the Tube / the underground","die U-Bahn (in London)","tju:b / 'ʌndəgraʊnd","We took the *Tube* to Oxford Circus.","In London sagt man 'the Tube'. Man fährt 'on the Tube', nicht 'in the Tube'."],["to go together","zusammenpassen / zueinander passen","","Blue and yellow *go together* really well.",""],["stress","Betonung","stres","Where's the *stress* in the word 'cathedral'?","Das ist das Nomen. Das Verb 'to stress' kommt gleich danach."],["stress mark","Betonungszeichen","'stres mɑ:k","The *stress mark* comes before the stressed syllable.",""],["to stress","betonen","stres","You *stress* the first syllable of 'gallery'.",""],["small talk","Smalltalk","'smɔ:l tɔ:k","We made *small talk* while we waited for the bus.","Lockeres Gespräch über Alltägliches, zum Beispiel übers Wetter."],["culture","Kultur","'kʌltʃə","I'd like to learn more about British *culture*.","Betonung auf der 1. Silbe: CUL-ture. Französisch: la culture."],["to expect (sth.)","etwas erwarten","ɪk'spekt","We *expected* a lot of tourists at the museum.","Nicht verwechseln: 'expect' = erwarten, 'wait' = warten."],["to continue (sth.)","etwas fortsetzen","kən'tɪnju:","After lunch we *continued* our walk.","Französisch: continuer."]]},{"id":"a3u1-b1","name":"U1 · Part B · 1 (S. 228–229)","cards":[["attraction","Attraktion / Anziehungspunkt","ə'trækʃn","The London Eye is a popular tourist *attraction*.","Französisch: l'attraction."],["natural history","Naturkunde","ˌnætʃrəl 'hɪstri","We visited the *Natural History* Museum in London.",""],["entry","Eintritt / Zutritt","'entri","*Entry* to many museums is free.","Französisch: l'entrée."],["in fact","eigentlich / in Wirklichkeit","ɪn 'fækt","It looks small, but *in fact* it's very big.",""],["fact","Tatsache / Fakt","fækt","Here's a fun *fact*: the first underground railway opened in London.","Französisch: le fait."],["to reserve","reservieren / buchen","rɪ'zɜ:v","I'd like to *reserve* a table for four, please.","Französisch: réserver."],["step","Stufe / Schritt","step","Be careful, there's a *step* at the door.","Zwei Bedeutungen: Stufe und Schritt."],["chance","Gelegenheit / Möglichkeit / Chance","tʃɑ:ns","Take the *chance* to visit Tower Bridge if you can.","Gesprochen wird es 'tschahns', mit langem a. Französisch: la chance."],["during","während (+ Nomen)","'djʊərɪŋ","I fell asleep *during* the film.","'during' steht vor einem Nomen. Vor einem ganzen Satz sagt man 'while'."],["to guard","bewachen","gɑ:d","Two dogs *guard* the farm.",""],["raven","Rabe","'reɪvn","A big black *raven* sat on the wall.",""],["blood","Blut","blʌd","The nurse took a little *blood* from my arm.","Das Wort reimt sich auf 'mud'."],["to be home to (sth.)","Heimat sein für etwas / etwas beheimaten","","London *is home to* millions of people.",""],["jewels","Juwelen","'dʒu:əlz","The Crown *Jewels* are kept in the Tower of London.","Betonung auf der 1. Silbe: JEW-els."]]},{"id":"a3u1-b2","name":"U1 · Part B · 2 (S. 229)","cards":[["education","(Schul-)Bildung / Erziehung","ˌedʒu'keɪʃn","A good *education* is important for a good job.","Französisch: l'éducation."],["adult","Erwachsener / Erwachsene","'ædʌlt","Tickets cost five pounds for an *adult* and two for a child.","Französisch: l'adulte."],["figure","Zahl / Ziffer","'fɪgə","Can you check the *figures* in this table?","Betonung auf der 1. Silbe: FI-gure."],["less (than)","weniger (als)","les","I have *less* time than my brother.","Das Gegenteil ist 'more'."],["tortoise","Schildkröte / Landschildkröte","'tɔ:təs","The *tortoise* walked very slowly.","Französisch: la tortue."],["parliament","Parlament","'pɑ:ləmənt","*Parliament* meets in London.","Achtung Schreibweise: parl-ia-ment, mit 'ia'. Französisch: le parlement."],["government","Regierung","'gʌvənmənt","The *government* wants to build new schools.","Schreibweise: gover-n-ment, das 'n' in der Mitte nicht vergessen. Französisch: le gouvernement."],["at one time","zur selben Zeit / gleichzeitig","","You can't talk to three people *at one time*.",""],["Christmas","Weihnachten","'krɪsməs","We eat turkey at *Christmas*.","Das 't' hört man nicht: 'kris-mes'. Der 1. Weihnachtsfeiertag heißt 'Christmas Day'."],["ticket office","Fahrkartenschalter / Kasse","'tɪkɪt ˌɒfɪs","You can buy tickets at the *ticket office*.",""],["detail","Detail / Einzelheit","'di:teɪl","Please tell me every *detail*.","Betonung auf der 1. Silbe: DE-tail. Französisch: le détail."]]},{"id":"a3u1-b3","name":"U1 · Part B · 3 (S. 229–230)","cards":[["a family of four","eine vierköpfige Familie","","We are *a family of four*: my parents, my brother and me.",""],["exact","genau","ɪg'zækt","What's the *exact* time?",""],["linking word","Bindewort","'lɪŋkɪŋ wɜ:d","'And' and 'but' are *linking words*.",""],["to link","verbinden / verknüpfen","lɪŋk","You can *link* two sentences with 'because'.",""],["instead of","anstelle von / statt","ɪn'sted əv","I'd like tea *instead of* coffee.","'instead of' + Nomen = anstelle von. 'instead' allein heißt stattdessen: I don't like tea. Can I have juice instead?"],["worth","wert","wɜ:θ","The ticket is *worth* ten pounds.",""],["to roar","brüllen","rɔ:","The lion *roared* loudly.",""],["feedback","Rückmeldung / Feedback","'fi:dbæk","Thanks for your *feedback* on my project.",""],["to improve","verbessern / sich verbessern","ɪm'pru:v","Your English will *improve* if you read a lot.",""],["to react (to)","reagieren (auf)","ri'ækt","The dog didn't *react* when I called.",""],["content","Inhalt","'kɒntent","The *content* of the book is very interesting.",""],["to point (sth.) out (to sb.)","(jemanden) auf etwas hinweisen","pɔɪnt 'aʊt","She *pointed out* a mistake in my text.",""],["spelling","Rechtschreibung / Schreibweise","'spelɪŋ","My *spelling* is getting better.",""]]},{"id":"a3u1-b4","name":"U1 · Part B · 4 (S. 230)","cards":[["line","Linie / U-Bahn-Linie","laɪn","Which *line* goes to Oxford Circus?","Französisch: la ligne."],["eastbound","Richtung Osten","'i:stbaʊnd","This train is *eastbound*.","Bei Zügen und Straßen: in Richtung Osten unterwegs."],["westbound","Richtung Westen","'westbaʊnd","The *westbound* train leaves from platform two.",""],["northbound","Richtung Norden","'nɔ:θbaʊnd","Take the *northbound* line to King's Cross.",""],["southbound","Richtung Süden","'saʊθbaʊnd","The *southbound* trains are late today.",""],["to change","umsteigen","tʃeɪndʒ","You have to *change* at King's Cross.","Hier heißt 'change' nicht ändern, sondern umsteigen. Französisch: changer."],["platform","Bahnsteig / Gleis","'plætfɔ:m","The train leaves from *platform* nine.",""],["announcement","Durchsage / Ansage","ə'naʊnsmənt","Please listen to the *announcement*.","Französisch: l'annonce."],["message","Nachricht / Botschaft","'mesɪdʒ","I got a *message* from Lena.","Zwei Bedeutungen: Nachricht (zum Beispiel eine SMS) und Botschaft (die Aussage eines Textes). Französisch: le message."]]},{"id":"a3u1-c1","name":"U1 · Part C · 1 (S. 230–231)","cards":[["to be on","eingeschaltet sein / an sein / laufen (im Fernsehen)","","The lights *are on*, so someone is at home.","Das Gegenteil ist 'to be off'. Im Fernsehen: 'The football is on.'"],["remote control","Fernbedienung","rɪˌməʊt kən'trəʊl","Where's the *remote control*?","Kurz sagt man auch 'the remote'."],["No way!","Auf keinen Fall! / Kommt nicht in Frage!","nəʊ 'weɪ","Can I stay up until midnight? – *No way!*",""],["And anyway, ...","Und überhaupt, ...","'eniweɪ","I'm tired. *And anyway*, it's too late.",""],["while","während (+ Satz)","waɪl","I listen to music *while* I do my homework.","'while' steht vor einem ganzen Satz. Vor einem Nomen sagt man 'during'."],["to turn (sth.) up","etwas lauter stellen","tɜ:n","Can you *turn up* the music, please?",""],["to turn (sth.) down","etwas leiser stellen","","Please *turn down* the TV. I'm doing my homework.",""],["to turn","sich drehen / sich umdrehen / abbiegen","tɜ:n","The woman *turned* round and smiled.","Weitere Bedeutungen: 'turn on' = einschalten, 'turn to sb.' = sich jemandem zuwenden, 'turn left' = links abbiegen."],["each other","sich gegenseitig / einander","ˌi:tʃ 'ʌðə","Mia and Sam help *each other* with homework.",""],["pub","Kneipe / Lokal","pʌb","We had lunch in a nice *pub*.",""],["towards","in Richtung / auf etwas zu","tə'wɔ:dz","She walked *towards* the station.",""],["mate","Kumpel / Freund","meɪt","I play football with my *mates* every Saturday.","Umgangssprache, sehr britisch."],["several","mehrere / verschiedene","'sevrəl","I've read *several* books by this author.","Mehr als zwei oder drei, aber nicht besonders viele."],["route","Strecke / Route","ru:t","What's the best *route* to the airport?","Vorsicht: Im Französischen heißt 'la route' Straße."],["speed","Geschwindigkeit","spi:d","The train travels at high *speed*.",""],["It was a pity that ...","Es war schade, dass ...","'pɪti","*It was a pity that* it rained all day.",""]]},{"id":"a3u1-n1","name":"U1 · Notting Hill · 1 (S. 231)","cards":[["to hold onto (sth.)","sich an etwas festhalten","həʊld 'ɒntu","She *held onto* the rope with both hands.","Unregelmäßig: hold – held – held."],["to scan (sth.) (for sth.)","etwas (nach etwas) absuchen","skæn","The police *scanned* the street for clues.",""],["to fill","füllen","fɪl","*Fill* the glass with water, please.",""],["pavement","Gehweg / Bürgersteig","'peɪvmənt","Don't ride your bike on the *pavement*.","Im amerikanischen Englisch sagt man 'sidewalk'."],["available","erhältlich / verfügbar / erreichbar","ə'veɪləbl","Tickets are *available* online.","Am Telefon heißt es erreichbar: Is Mr Bell available?"],["all around her","überall um sie herum","","Suddenly there were people *all around her*.",""],["whistle","Pfeife / Trillerpfeife","'wɪsl","The referee blew his *whistle*.","Das 't' hört man nicht: 'wissl'."],["to blow a whistle","pfeifen (auf der Trillerpfeife)","bləʊ ə 'wɪsl","The guard *blew a whistle* and the train left.","Unregelmäßig: blow – blew – blown."],["to panic","in Panik geraten","'pænɪk","Don't *panic*! We still have time.","Schreibweise: panic – panicked – panicking, mit 'k'. Französisch: paniquer."],["to bend down","sich hinunterbeugen / sich bücken","bend","He *bent down* to tie his shoelaces.","Unregelmäßig: bend – bent – bent."],["crowded","voller Menschen / überfüllt","'kraʊdɪd","The Tube is always *crowded* at eight o'clock.",""]]},{"id":"a3u1-n2","name":"U1 · Notting Hill · 2 (S. 231–232)","cards":[["rope","Seil","rəʊp","The climbers held on to a long *rope*.",""],["wing","Flügel","wɪŋ","The bird hurt its *wing*.",""],["rainbow","Regenbogen","'reɪnbəʊ","After the rain we saw a *rainbow*.",""],["dizzy","schwindlig","'dɪzi","I felt *dizzy* after the ride.",""],["hip","Hüfte","hɪp","She put her hands on her *hips*.",""],["to scream","schreien","skri:m","The children *screamed* with excitement.",""],["rhythm","Rhythmus","'rɪðəm","I love the *rhythm* of this song.","Schwierige Schreibweise: r-h-y-t-h-m. Französisch: le rythme."],["to scare (sb.)","jemanden erschrecken / jemandem Angst machen","skeə","Horror films *scare* me.","Verwandt: scared = verängstigt, scary = unheimlich."],["loudspeaker","Lautsprecher / Megaphon","ˌlaʊd'spi:kə","The announcement came from a *loudspeaker*.",""],["to mind","etwas dagegen haben","maɪnd","I don't *mind* waiting.","Meist verneint oder in Fragen benutzt."],["Do you mind if ...?","Stört es dich, wenn ...? / Hast du etwas dagegen, wenn ...?","","*Do you mind if* I open the window?","Als Antwort 'kein Problem': No, not at all."],["to rest","ruhen / sich ausruhen","rest","Let's *rest* for a few minutes.",""],["under his breath","flüsternd / murmelnd","'breθ","She whispered something *under her breath*.",""]]}];
+const PRESETS=[{"id":"a3u1-a1","name":"U1 · Part A · 1 (S. 227)","cards":[["the best thing about ...","das Beste an ...","","The *best thing about* my school is the sports hall.","",""],["huge","riesig / sehr groß","'hju:dʒ","The giraffe house at the zoo is *huge*.","","Sprich es wie 'Hüge'. Und der Hügel dahinter ist riesig."],["as soon as","sobald / sowie","əz 'su:n əz","I'll text you *as soon as* I get home.","",""],["cathedral","Kathedrale / Dom","kə'θi:drəl","We climbed to the top of St Paul's *Cathedral*.","Betonung auf der 2. Silbe: ca-THE-dral. Französisch: la cathédrale.",""],["palace","Palast / Schloss","'pæləs","Buckingham *Palace* is a famous building in London.","Betonung auf der 1. Silbe: PA-lace. Französisch: le palais.","Palast ohne das t, dafür ein 'ce' hinten: palace."],["Welsh","walisisch","welʃ","My friend from Cardiff speaks *Welsh* at home.","","Welsh gehört zu Wales. Wal-es, Welsh: Die Waliser sprechen Welsh."],["to reply (to)","antworten (auf) / erwidern / entgegnen","rɪ'plaɪ","I *replied* to Mia's message right away.","","Re-ply: Auf 'Play' drücken und zurückspielen, das ist antworten."],["Europe","Europa","'jʊərəp","France and Spain are countries in *Europe*.","Das E am Anfang spricht man wie 'ju', anders als im Deutschen.",""],["western","westlich / West-","'westən","Wales is in the *western* part of Britain.","","Western-Filme spielen im Wilden Westen."],["I see.","Aha! / Verstehe.","","The bus is late. – *I see.* Then let's wait.","","I see heißt 'ich sehe'. Wer etwas sieht, hat es verstanden."],["lift","Fahrstuhl / Aufzug","lɪft","The *lift* is broken, so we take the stairs.","Im amerikanischen Englisch sagt man 'elevator'.","Skilift kennst du. Ein Lift hebt dich nach oben, auch im Haus."],["amazing","erstaunlich / unglaublich","ə'meɪzɪŋ","The view from the London Eye is *amazing*.","","In a-MAZE-ing steckt 'maze' (Irrgarten). So ein Irrgarten ist unglaublich."],["quite","ziemlich / völlig / ganz","kwaɪt","It's *quite* cold today, so I'll wear a jacket.","'quite' kann 'ziemlich' oder 'ganz' heißen: 'not quite good enough' = nicht ganz gut genug.","Nicht mit 'quiet' (leise) verwechseln: quiet hat zwei Silben, quite nur eine."],["queue","Schlange / Reihe","kju:","There was a long *queue* in front of the cinema.","Gemeint ist eine Schlange wartender Menschen, nicht das Tier.","Schau hin: Ein Q mit einer langen Schlange dahinter: Q-ueue."],["How do you know ...?","Woher weißt du ...? / Woher kennst du ...?","","*How do you know* Jack? – We play football together.","",""],["post","Posting / Blog-Eintrag","pəʊst","I wrote a new *post* for our class blog.","Im Blog ist es ein Eintrag, nicht die Post, die der Briefträger bringt.",""],["to add (to)","hinzufügen / ergänzen / addieren (zu)","æd","*Add* two spoons of sugar to the milk.","","Add sieht aus wie addieren, und genau das ist es auch."]]},{"id":"a3u1-a2","name":"U1 · Part A · 2 (S. 227)","cards":[["carnival","Karneval / Fasching","'kɑ:nɪvl","We watched the *carnival* parade in Notting Hill.","Im Englischen sind mit 'carnival' allgemein bunte Umzüge mit Musik, Tanz und Festwagen gemeint, nicht nur Fasching.",""],["test","Test","test","We have an English *test* on Friday.","",""],["to be into (sth.)","etwas mögen / auf etwas stehen","","My sister *is into* K-pop.","Umgangssprache: auf etwas stehen, etwas richtig gern mögen.","Du bist 'drin' in einem Hobby, also magst du es: I'm into music."],["to enjoy","genießen","ɪn'dʒɔɪ","I really *enjoyed* the film last night.","Oft auch: Spaß an etwas haben, zum Beispiel 'I enjoy swimming.'","In en-JOY steckt 'joy', die Freude. Wer Freude hat, genießt."],["by the way","übrigens","baɪ ðə 'weɪ","*By the way*, did you do your homework?","","'Nebenbei auf dem Weg' fällt dir noch etwas ein. Übrigens!"],["north","Norden / nördlich","nɔ:θ","Scotland is in the *north* of Britain.","","North ist Nord, nur mit einem 'th' hinten."],["east","Osten / östlich","i:st","The sun rises in the *east*.","","East klingt wie Ost. Und Ostern heißt Easter."],["south","Süden / südlich","saʊθ","Spain is *south* of France.","","South und Sun fangen beide mit S an: Im Süden scheint die Sonne."],["west","Westen / westlich","west","The sun sets in the *west*.","","West ist das Wort aus dem Wilden Westen, Western-Filme."],["north-east","Nordosten","ˌnɔ:θ'i:st","Newcastle is in the *north-east* of England.","","Wie im Deutschen: erst north oder south, dann east oder west."],["south-east","Südosten","ˌsaʊθ'i:st","London is in the *south-east* of England.","",""],["south-west","Südwesten","ˌsaʊθ'west","Cornwall is in the *south-west* of England.","",""],["north-west","Nordwesten","ˌnɔ:θ'west","Liverpool is in the *north-west* of England.","",""]]},{"id":"a3u1-a3","name":"U1 · Part A · 3 (S. 228)","cards":[["darkness","Dunkelheit / Finsternis","'dɑ:knəs","We walked home through the *darkness*.","","dark (dunkel) plus -ness: Dunkel-heit."],["clue","Hinweis / Anhaltspunkt","klu:","The detective found a *clue* under the sofa.","","Cluedo, das Detektivspiel: Dort sucht man nach Hinweisen."],["skyline","Skyline / Horizont","'skaɪlaɪn","You can see London's *skyline* from the river.","","Sky plus line: die Linie, wo der Himmel auf die Häuser trifft."],["false","falsch","fɔ:ls","London is the capital of France. – That's *false*!","Das Gegenteil ist 'true' (wahr).","False klingt fast wie 'falsch'."],["to stay (at, with)","(vorübergehend) wohnen / übernachten (in, bei)","steɪ","We *stayed* with my grandma for the weekend.","'stay at a hotel' = im Hotel übernachten, 'stay with sb.' = bei jemandem wohnen.","Wie bei 'Sitz, bleib!' (sit, stay): stay heißt bleiben, also auch übernachten."],["timetable","Fahrplan / Stundenplan","'taɪmteɪbl","Check the bus *timetable* before you leave.","Zwei Bedeutungen: Fahrplan und Stundenplan.","Time plus table: eine Tabelle mit Zeiten."],["restaurant","Restaurant","'restrɒnt","We had dinner in an Italian *restaurant*.","Das 'au' hört man kaum: 'res-tront'. Französisch: le restaurant.",""],["gallery","Galerie","'gæləri","The National *Gallery* has famous paintings.","Betonung auf der 1. Silbe: GAL-le-ry (im Deutschen liegt sie auf der letzten). Französisch: la galerie.",""],["the Tube / the underground","die U-Bahn (in London)","tju:b / 'ʌndəgraʊnd","We took the *Tube* to Oxford Circus.","In London sagt man 'the Tube'. Man fährt 'on the Tube', nicht 'in the Tube'.","Tube heißt Röhre. Die U-Bahn fährt durch enge Röhren."],["to go together","zusammenpassen / zueinander passen","","Blue and yellow *go together* really well.","","Dinge, die zusammen 'gehen', passen zusammen: Blau und Gelb go together."],["stress","Betonung","stres","Where's the *stress* in the word 'cathedral'?","Das ist das Nomen. Das Verb 'to stress' kommt gleich danach.",""],["stress mark","Betonungszeichen","'stres mɑ:k","The *stress mark* comes before the stressed syllable.","",""],["to stress","betonen","stres","You *stress* the first syllable of 'gallery'.","",""],["small talk","Smalltalk","'smɔ:l tɔ:k","We made *small talk* while we waited for the bus.","Lockeres Gespräch über Alltägliches, zum Beispiel übers Wetter.","small plus talk: ein kleines Gespräch."],["culture","Kultur","'kʌltʃə","I'd like to learn more about British *culture*.","Betonung auf der 1. Silbe: CUL-ture. Französisch: la culture.",""],["to expect (sth.)","etwas erwarten","ɪk'spekt","We *expected* a lot of tourists at the museum.","Nicht verwechseln: 'expect' = erwarten, 'wait' = warten.","Erwarten passiert im Kopf (expect). Warten (wait) tust du an einem Ort."],["to continue (sth.)","etwas fortsetzen","kən'tɪnju:","After lunch we *continued* our walk.","Französisch: continuer.","Beim Videospiel steht 'Continue?': Willst du weitermachen?"]]},{"id":"a3u1-b1","name":"U1 · Part B · 1 (S. 228–229)","cards":[["attraction","Attraktion / Anziehungspunkt","ə'trækʃn","The London Eye is a popular tourist *attraction*.","Französisch: l'attraction.",""],["natural history","Naturkunde","ˌnætʃrəl 'hɪstri","We visited the *Natural History* Museum in London.","","natural (natürlich) plus history (Geschichte): die Geschichte der Natur."],["entry","Eintritt / Zutritt","'entri","*Entry* to many museums is free.","Französisch: l'entrée.","Entry ist fast 'Entrée': der Eingang zum Essen."],["in fact","eigentlich / in Wirklichkeit","ɪn 'fækt","It looks small, but *in fact* it's very big.","","Fast wie 'in Fakt': in fact, also in Wirklichkeit."],["fact","Tatsache / Fakt","fækt","Here's a fun *fact*: the first underground railway opened in London.","Französisch: le fait.",""],["to reserve","reservieren / buchen","rɪ'zɜ:v","I'd like to *reserve* a table for four, please.","Französisch: réserver.",""],["step","Stufe / Schritt","step","Be careful, there's a *step* at the door.","Zwei Bedeutungen: Stufe und Schritt.","Stepper im Fitnessstudio oder Stepptanz: Man tritt von Stufe zu Stufe."],["chance","Gelegenheit / Möglichkeit / Chance","tʃɑ:ns","Take the *chance* to visit Tower Bridge if you can.","Gesprochen wird es 'tschahns', mit langem a. Französisch: la chance.",""],["during","während (+ Nomen)","'djʊərɪŋ","I fell asleep *during* the film.","'during' steht vor einem Nomen. Vor einem ganzen Satz sagt man 'while'.","In 'duration' (Dauer) steckt dasselbe 'dur': während der Dauer."],["to guard","bewachen","gɑ:d","Two dogs *guard* the farm.","","Bodyguard: Der Leibwächter bewacht."],["raven","Rabe","'reɪvn","A big black *raven* sat on the wall.","",""],["blood","Blut","blʌd","The nurse took a little *blood* from my arm.","Das Wort reimt sich auf 'mud'.","Blood reimt sich auf 'mud', Schlamm. Stell dir blutigen Schlamm vor."],["to be home to (sth.)","Heimat sein für etwas / etwas beheimaten","","London *is home to* millions of people.","","In 'home' steckt das Heim: ein Heim für etwas sein."],["jewels","Juwelen","'dʒu:əlz","The Crown *Jewels* are kept in the Tower of London.","Betonung auf der 1. Silbe: JEW-els.",""]]},{"id":"a3u1-b2","name":"U1 · Part B · 2 (S. 229)","cards":[["education","(Schul-)Bildung / Erziehung","ˌedʒu'keɪʃn","A good *education* is important for a good job.","Französisch: l'éducation.",""],["adult","Erwachsener / Erwachsene","'ædʌlt","Tickets cost five pounds for an *adult* and two for a child.","Französisch: l'adulte.",""],["figure","Zahl / Ziffer","'fɪgə","Can you check the *figures* in this table?","Betonung auf der 1. Silbe: FI-gure.","Ziffern sind kleine Figuren auf dem Papier."],["less (than)","weniger (als)","les","I have *less* time than my brother.","Das Gegenteil ist 'more'.","Less is more: weniger ist mehr."],["tortoise","Schildkröte / Landschildkröte","'tɔ:təs","The *tortoise* walked very slowly.","Französisch: la tortue.","Eine Torte mit Panzer: Tor-toise, die Schildkröte."],["parliament","Parlament","'pɑ:ləmənt","*Parliament* meets in London.","Achtung Schreibweise: parl-ia-ment, mit 'ia'. Französisch: le parlement.","Im Wort steckt 'parler', das französische Wort für reden. Im Parlament wird geredet."],["government","Regierung","'gʌvənmənt","The *government* wants to build new schools.","Schreibweise: gover-n-ment, das 'n' in der Mitte nicht vergessen. Französisch: le gouvernement.","Man muss 'govern' (regieren) sehen: gover-n-ment."],["at one time","zur selben Zeit / gleichzeitig","","You can't talk to three people *at one time*.","",""],["Christmas","Weihnachten","'krɪsməs","We eat turkey at *Christmas*.","Das 't' hört man nicht: 'kris-mes'. Der 1. Weihnachtsfeiertag heißt 'Christmas Day'.","Christ plus mas (Messe): die Messe für Christus. Das t schreibt man, hört es aber nicht."],["ticket office","Fahrkartenschalter / Kasse","'tɪkɪt ˌɒfɪs","You can buy tickets at the *ticket office*.","","Ticket plus office (Büro): das Büro, in dem es Tickets gibt."],["detail","Detail / Einzelheit","'di:teɪl","Please tell me every *detail*.","Betonung auf der 1. Silbe: DE-tail. Französisch: le détail.",""]]},{"id":"a3u1-b3","name":"U1 · Part B · 3 (S. 229–230)","cards":[["a family of four","eine vierköpfige Familie","","We are *a family of four*: my parents, my brother and me.","",""],["exact","genau","ɪg'zækt","What's the *exact* time?","",""],["linking word","Bindewort","'lɪŋkɪŋ wɜ:d","'And' and 'but' are *linking words*.","","Ein 'linking word' ist wie ein Link im Internet: Es verbindet."],["to link","verbinden / verknüpfen","lɪŋk","You can *link* two sentences with 'because'.","","Ein Link im Netz führt von einer Seite zur nächsten, er verbindet."],["instead of","anstelle von / statt","ɪn'sted əv","I'd like tea *instead of* coffee.","'instead of' + Nomen = anstelle von. 'instead' allein heißt stattdessen: I don't like tea. Can I have juice instead?","Klingt fast wie 'in statt': instead of heißt statt."],["worth","wert","wɜ:θ","The ticket is *worth* ten pounds.","",""],["to roar","brüllen","rɔ:","The lion *roared* loudly.","","Der Löwe macht 'Rooaar'. Das Wort klingt wie das Brüllen."],["feedback","Rückmeldung / Feedback","'fi:dbæk","Thanks for your *feedback* on my project.","","Feed plus back: Man füttert dich mit einer Rückmeldung zurück."],["to improve","verbessern / sich verbessern","ɪm'pru:v","Your English will *improve* if you read a lot.","","Du beweist (prove), dass du besser wirst: im-prove."],["to react (to)","reagieren (auf)","ri'ækt","The dog didn't *react* when I called.","","Re-aktion: Auf eine Aktion folgt eine Reaktion."],["content","Inhalt","'kɒntent","The *content* of the book is very interesting.","","Content heißt Inhalt. Wer Videos macht, macht 'Content', also Inhalte."],["to point (sth.) out (to sb.)","(jemanden) auf etwas hinweisen","pɔɪnt 'aʊt","She *pointed out* a mistake in my text.","","point (zeigen) plus out (heraus): etwas herauszeigen, darauf hinweisen."],["spelling","Rechtschreibung / Schreibweise","'spelɪŋ","My *spelling* is getting better.","","Ein Zauberspruch (spell) muss Buchstabe für Buchstabe stimmen. Spell heißt auch buchstabieren."]]},{"id":"a3u1-b4","name":"U1 · Part B · 4 (S. 230)","cards":[["line","Linie / U-Bahn-Linie","laɪn","Which *line* goes to Oxford Circus?","Französisch: la ligne.",""],["eastbound","Richtung Osten","'i:stbaʊnd","This train is *eastbound*.","Bei Zügen und Straßen: in Richtung Osten unterwegs.","-bound heißt 'gebunden': an die Richtung gebunden, also Richtung Osten."],["westbound","Richtung Westen","'westbaʊnd","The *westbound* train leaves from platform two.","",""],["northbound","Richtung Norden","'nɔ:θbaʊnd","Take the *northbound* line to King's Cross.","",""],["southbound","Richtung Süden","'saʊθbaʊnd","The *southbound* trains are late today.","",""],["to change","umsteigen","tʃeɪndʒ","You have to *change* at King's Cross.","Hier heißt 'change' nicht ändern, sondern umsteigen. Französisch: changer.","Wechselgeld heißt auch 'change'. Wechseln heißt hier: umsteigen."],["platform","Bahnsteig / Gleis","'plætfɔ:m","The train leaves from *platform* nine.","","Plattform kennst du. Der Bahnsteig ist eine flache Plattform."],["announcement","Durchsage / Ansage","ə'naʊnsmənt","Please listen to the *announcement*.","Französisch: l'annonce.","Der Announcer im Radio macht die Ansagen."],["message","Nachricht / Botschaft","'mesɪdʒ","I got a *message* from Lena.","Zwei Bedeutungen: Nachricht (zum Beispiel eine SMS) und Botschaft (die Aussage eines Textes). Französisch: le message.","Messenger, die Nachrichten-App: message ist die Nachricht."]]},{"id":"a3u1-c1","name":"U1 · Part C · 1 (S. 230–231)","cards":[["to be on","eingeschaltet sein / an sein / laufen (im Fernsehen)","","The lights *are on*, so someone is at home.","Das Gegenteil ist 'to be off'. Im Fernsehen: 'The football is on.'",""],["remote control","Fernbedienung","rɪˌməʊt kən'trəʊl","Where's the *remote control*?","Kurz sagt man auch 'the remote'.","remote heißt entfernt: Kontrolle aus der Ferne."],["No way!","Auf keinen Fall! / Kommt nicht in Frage!","nəʊ 'weɪ","Can I stay up until midnight? – *No way!*","","Kein Weg dahin: auf keinen Fall!"],["And anyway, ...","Und überhaupt, ...","'eniweɪ","I'm tired. *And anyway*, it's too late.","",""],["while","während (+ Satz)","waɪl","I listen to music *while* I do my homework.","'while' steht vor einem ganzen Satz. Vor einem Nomen sagt man 'during'.","Klingt wie 'Weile': eine Weile lang, also während."],["to turn (sth.) up","etwas lauter stellen","tɜ:n","Can you *turn up* the music, please?","","Nach oben drehen (up): lauter."],["to turn (sth.) down","etwas leiser stellen","","Please *turn down* the TV. I'm doing my homework.","","Nach unten drehen (down): leiser."],["to turn","sich drehen / sich umdrehen / abbiegen","tɜ:n","The woman *turned* round and smiled.","Weitere Bedeutungen: 'turn on' = einschalten, 'turn to sb.' = sich jemandem zuwenden, 'turn left' = links abbiegen.",""],["each other","sich gegenseitig / einander","ˌi:tʃ 'ʌðə","Mia and Sam help *each other* with homework.","","each (jeder) plus other (anderer): jeder den anderen."],["pub","Kneipe / Lokal","pʌb","We had lunch in a nice *pub*.","","Pub kommt von 'public house', dem öffentlichen Haus."],["towards","in Richtung / auf etwas zu","tə'wɔ:dz","She walked *towards* the station.","","-wards klingt wie -wärts, wie in aufwärts: in diese Richtung."],["mate","Kumpel / Freund","meɪt","I play football with my *mates* every Saturday.","Umgangssprache, sehr britisch.","Teammate, roommate: Ein mate ist ein Kamerad."],["several","mehrere / verschiedene","'sevrəl","I've read *several* books by this author.","Mehr als zwei oder drei, aber nicht besonders viele.",""],["route","Strecke / Route","ru:t","What's the best *route* to the airport?","Vorsicht: Im Französischen heißt 'la route' Straße.",""],["speed","Geschwindigkeit","spi:d","The train travels at high *speed*.","","Speedboot, Speed-Dating: Speed ist das Tempo."],["It was a pity that ...","Es war schade, dass ...","'pɪti","*It was a pity that* it rained all day.","","Pity erinnert an Mitleid: Es tut einem leid, also schade."]]},{"id":"a3u1-n1","name":"U1 · Notting Hill · 1 (S. 231)","cards":[["to hold onto (sth.)","sich an etwas festhalten","həʊld 'ɒntu","She *held onto* the rope with both hands.","Unregelmäßig: hold – held – held.","Wie 'halten, hielt, gehalten': hold, held, held."],["to scan (sth.) (for sth.)","etwas (nach etwas) absuchen","skæn","The police *scanned* the street for clues.","","Scanner: Er tastet etwas Stück für Stück ab."],["to fill","füllen","fɪl","*Fill* the glass with water, please.","","Fill klingt fast wie 'füll'."],["pavement","Gehweg / Bürgersteig","'peɪvmənt","Don't ride your bike on the *pavement*.","Im amerikanischen Englisch sagt man 'sidewalk'.","Pave heißt pflastern: ein gepflasterter Weg, das Pflaster am Straßenrand."],["available","erhältlich / verfügbar / erreichbar","ə'veɪləbl","Tickets are *available* online.","Am Telefon heißt es erreichbar: Is Mr Bell available?",""],["all around her","überall um sie herum","","Suddenly there were people *all around her*.","",""],["whistle","Pfeife / Trillerpfeife","'wɪsl","The referee blew his *whistle*.","Das 't' hört man nicht: 'wissl'.","Das Wort zischt wie eine Pfeife: wiss-l. Das t bleibt stumm."],["to blow a whistle","pfeifen (auf der Trillerpfeife)","bləʊ ə 'wɪsl","The guard *blew a whistle* and the train left.","Unregelmäßig: blow – blew – blown.","blow, blew, blown: blasen, blies, geblasen."],["to panic","in Panik geraten","'pænɪk","Don't *panic*! We still have time.","Schreibweise: panic – panicked – panicking, mit 'k'. Französisch: paniquer.","Das c bleibt hart, deshalb kommt vor -ed ein k: panicked."],["to bend down","sich hinunterbeugen / sich bücken","bend","He *bent down* to tie his shoelaces.","Unregelmäßig: bend – bent – bent.","Eine bend in the road ist eine Kurve. Wer sich nach unten biegt, bückt sich."],["crowded","voller Menschen / überfüllt","'kraʊdɪd","The Tube is always *crowded* at eight o'clock.","","Crowd, die Menschenmenge, kennst du von Crowdfunding."]]},{"id":"a3u1-n2","name":"U1 · Notting Hill · 2 (S. 231–232)","cards":[["rope","Seil","rəʊp","The climbers held on to a long *rope*.","","Auf Schiffen heißt das Tau noch heute 'Reep'. Das klingt fast gleich."],["wing","Flügel","wɪŋ","The bird hurt its *wing*.","","Red Bull verleiht Flügel: Red Bull gives you wings."],["rainbow","Regenbogen","'reɪnbəʊ","After the rain we saw a *rainbow*.","","rain (Regen) plus bow (Bogen): der Bogen im Regen."],["dizzy","schwindlig","'dɪzi","I felt *dizzy* after the ride.","","Die zwei z in der Mitte sehen aus wie ein Zickzack. Dabei wird einem schwindlig."],["hip","Hüfte","hɪp","She put her hands on her *hips*.","","Hip-Hop: Dabei schwingt die Hüfte."],["to scream","schreien","skri:m","The children *screamed* with excitement.","","Der Horrorfilm 'Scream': Da schreit jemand."],["rhythm","Rhythmus","'rɪðəm","I love the *rhythm* of this song.","Schwierige Schreibweise: r-h-y-t-h-m. Französisch: le rythme.","Rhythm Helps Your Two Hips Move: r-h-y-t-h-m."],["to scare (sb.)","jemanden erschrecken / jemandem Angst machen","skeə","Horror films *scare* me.","Verwandt: scared = verängstigt, scary = unheimlich.","Eine Vogelscheuche heißt scarecrow. Sie erschreckt (scare) die Krähen."],["loudspeaker","Lautsprecher / Megaphon","ˌlaʊd'spi:kə","The announcement came from a *loudspeaker*.","","loud (laut) plus speaker (Sprecher): der laute Sprecher."],["to mind","etwas dagegen haben","maɪnd","I don't *mind* waiting.","Meist verneint oder in Fragen benutzt.","Mind heißt Verstand. 'Do you mind?' fragt: Macht es deinem Verstand etwas aus?"],["Do you mind if ...?","Stört es dich, wenn ...? / Hast du etwas dagegen, wenn ...?","","*Do you mind if* I open the window?","Als Antwort 'kein Problem': No, not at all.",""],["to rest","ruhen / sich ausruhen","rest","Let's *rest* for a few minutes.","","Rast, wie in Raststätte, klingt fast wie rest."],["under his breath","flüsternd / murmelnd","'breθ","She whispered something *under her breath*.","","Breath ist der Atem: so leise, dass es kaum mehr als Atem ist."]]}];
 function defaultState(){
-  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink'],presetSeen:[]};
+  return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink'],presetSeen:[],mnOn:false,varied:true,bseen:[],tbest:0,tlog:[]};
 }
 function buildPreset(p,pc){
   return {id:p.id,name:p.name,lang:'en',builtin:false,preset:true,cards:p.cards.map(function(c,i){
     const id=p.id+'-'+i,o={id:id,fx:c[0],de:c[1],box:1,due:0,u:1};
-    if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];
+    if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];if(c[5])o.mn=c[5];
     const q=pc&&pc[id];
-    if(q){o.box=q[0];o.due=q[1];if(!q[2])delete o.u;}
+    if(q){o.box=q[0];o.due=q[1];if(!q[2])delete o.u;if(q[3])o.my=q[3];if(q[4])o.f=q[4];}
     return o;
   })};
 }
@@ -625,13 +640,13 @@ function buildPreset(p,pc){
 const B64=function(x){return btoa(unescape(encodeURIComponent(x)));};
 const UN64=function(x){return decodeURIComponent(escape(atob(x)));};
 function makeCode(){
-  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,ps:[],pc:{},us:[]};
+  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,mnOn:!!state.mnOn,varied:state.varied!==false,bseen:state.bseen||[],tbest:state.tbest||0,tlog:state.tlog||[],ps:[],pc:{},us:[]};
   state.sets.forEach(function(s){
     const pd=s.preset&&PRESETS.find(function(p){return p.id===s.id;});
     const same=pd&&pd.cards.length===s.cards.length&&s.cards.every(function(c,i){return c.id===s.id+'-'+i&&c.fx===pd.cards[i][0]&&c.de===pd.cards[i][1];});
     if(same){
       o.ps.push(s.id);
-      s.cards.forEach(function(c){if(c.box!==1||c.due!==0||!c.u)o.pc[c.id]=[c.box,c.due,c.u?1:0];});
+      s.cards.forEach(function(c){if(c.box!==1||c.due!==0||!c.u||c.my||c.f)o.pc[c.id]=[c.box,c.due,c.u?1:0,c.my||'',c.f||0];});
     }else o.us.push(s);
   });
   return 'LH1:'+B64(JSON.stringify(o));
@@ -647,7 +662,7 @@ function parseCode(txt){
 }
 function stateFromCode(o){
   const st=defaultState();
-  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
+  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped','mnOn','varied','bseen','tbest','tlog'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
   st.presetSeen=Array.isArray(o.presetSeen)?o.presetSeen:[];
   st.sets=[];
   (o.ps||[]).forEach(function(id){const p=PRESETS.find(function(x){return x.id===id;});if(p)st.sets.push(buildPreset(p,o.pc||{}));});
@@ -667,10 +682,17 @@ function migrate(st){
   }
   if(!Array.isArray(st.hiddenTopics))st.hiddenTopics=[];
   if(!Array.isArray(st.presetSeen))st.presetSeen=[];
+  if(!Array.isArray(st.bseen))st.bseen=[];
+  if(!Array.isArray(st.tlog))st.tlog=[];
   PRESETS.forEach(function(p){
     if(st.presetSeen.indexOf(p.id)>=0)return;
     st.presetSeen.push(p.id);
     st.sets.push(buildPreset(p));
+  });
+  st.sets.forEach(function(x){
+    if(!x.preset)return;
+    const p=PRESETS.find(function(y){return y.id===x.id;});if(!p)return;
+    x.cards.forEach(function(c,i){const d=p.cards[i];if(d&&c.fx===d[0]){if(d[5])c.mn=d[5];else delete c.mn;}});
   });
   return st;
 }
@@ -853,9 +875,9 @@ function extrasHtml(c){
   if(c.nt)h+='<div class="nt">'+esc(c.nt)+'</div>';
   return h;
 }
-function cardFace(c,set,big){
+function cardFace(c,set,big,showMn){
   return '<div class="card stack" style="gap:12px"><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div class="'+(big?'big':'wd')+'">'+esc(c.fx)+'</div>'+(c.ipa?'<div class="ipa">['+esc(c.ipa)+']</div>':'')+'</div>'+sayBtn(c.id,'w','Wort anhören')+'</div>'+
-    '<div class="tr">'+esc(deShow(c.de))+'</div>'+extrasHtml(c)+'</div>';
+    '<div class="tr">'+esc(deShow(c.de))+'</div>'+extrasHtml(c)+(showMn?mnHtml(c):'')+'</div>';
 }
 
 /* ---------- Bausteine ---------- */
@@ -877,10 +899,184 @@ function keysRow(chars){
 }
 
 /* ---------- Screens ---------- */
+/* ---------- Eselsbrücken, Knacknüsse, Aufgabenarten, Abzeichen, Test, Wochenblick ---------- */
+function mnHtml(c){
+  if(!state.mnOn)return '';
+  let h='';
+  if(c.mn)h+='<div class="mn"><span class="eyebrow">Eselsbrücke</span><p>'+esc(c.mn)+'</p></div>';
+  if(ui.my&&ui.my.cid===c.id){
+    h+='<div class="mn stack" style="gap:8px"><label class="eyebrow" for="myin">Meine Eselsbrücke</label><textarea id="myin" class="area" maxlength="160" style="min-height:70px" placeholder="Was fällt dir zu diesem Wort ein?">'+esc(ui.my.txt)+'</textarea><div class="row"><button class="btn small" data-a="mysave" data-c="'+c.id+'">Speichern</button><button class="btn ghost small" data-a="mycancel">Abbrechen</button></div></div>';
+  }else if(c.my){
+    h+='<div class="mn"><span class="eyebrow">Meine Eselsbrücke</span><p>'+esc(c.my)+'</p><button class="link" data-a="myedit" data-c="'+c.id+'">ändern</button></div>';
+  }else{
+    h+='<button class="link" data-a="myedit" data-c="'+c.id+'">Eigene Eselsbrücke ergänzen</button>';
+  }
+  return h;
+}
+const isKnack=function(c){return !c.u&&(c.f||0)>=2&&c.box<=3;};
+function knackList(){
+  const out=[];
+  state.sets.forEach(function(s){s.cards.forEach(function(c){if(isKnack(c))out.push({s:s,c:c});});});
+  return out;
+}
+function extraVocabHtml(){
+  const kn=knackList();
+  const learned=state.sets.reduce(function(a,x){return a+x.cards.filter(function(c){return !c.u;}).length;},0);
+  let h='';
+  if(kn.length){
+    h+='<div class="card stack"><h3>Knacknüsse</h3><p class="muted small">Diese Wörter wollten bisher nicht hängen bleiben. Eine Kurzrunde nur damit:</p><div class="words" style="max-height:none">'+kn.slice(0,8).map(function(x){return '<div><span>'+esc(x.c.fx)+'</span><span class="muted">'+esc(deShow(x.c.de))+'</span></div>';}).join('')+(kn.length>8?'<div><span class="muted">und '+(kn.length-8)+' weitere</span><span></span></div>':'')+'</div><button class="btn block" data-a="vstart" data-s="knack">Knacknüsse üben ('+Math.min(10,kn.length)+' von '+kn.length+')</button></div>';
+  }
+  if(learned>=5)h+='<button class="btn ghost block" data-a="go" data-v="ttest">Probetest wie in der Arbeit</button>';
+  return h;
+}
+/* Mehrfachauswahl: falsche Antworten aus anderen Karten derselben Sprache */
+function mcOptions(card,set,toDe){
+  const lab=function(c){return toDe?deShow(c.de):String(c.fx).split(/\s*\/\s*/).join(' / ');};
+  const right=lab(card),seen={};seen[right.toLowerCase()]=1;
+  let pool=[];
+  state.sets.forEach(function(x){if(x.lang===set.lang)x.cards.forEach(function(c){if(c.id!==card.id)pool.push(c);});});
+  const known=pool.filter(function(c){return !c.u;});
+  pool=shuffle(known.length>=6?known:pool);
+  const out=[];
+  for(let i=0;i<pool.length&&out.length<3;i++){
+    const t=lab(pool[i]),k=t.toLowerCase();
+    if(!seen[k]){seen[k]=1;out.push({t:t,ok:false});}
+  }
+  if(out.length<3)return null;
+  out.push({t:right,ok:true});
+  return shuffle(out);
+}
+function gapOf(card){
+  if(!card.ex)return null;
+  const m=String(card.ex).match(/\*([^*]+)\*/);
+  if(!m||(String(card.ex).match(/\*/g)||[]).length!==2||m[1].length>28)return null;
+  return m[1];
+}
+function pickType(card,set,toDe){
+  if(state.varied===false)return 'type';
+  const r=Math.random();
+  if(card.box<=2)return r<0.55?'mc':'type';
+  if(r<0.30&&gapOf(card))return 'gap';
+  if(r<0.55&&canSpeak()&&checkVocab(spokenWord(card),card.fx,set.lang).r==='ok')return 'listen';
+  return 'type';
+}
+/* Abzeichen */
+function badgeList(){
+  let sit=0,mine=0,ans=0;
+  state.sets.forEach(function(x){x.cards.forEach(function(c){if(!c.u&&c.box>=3)sit++;if(c.my)mine++;});});
+  Object.keys(state.days).forEach(function(k){ans+=(state.days[k]||{}).c||0;});
+  const st=streak(),seen=state.bseen||[],L=[];
+  const add=function(id,g,name,desc,now){L.push({id:id,g:g,name:name,desc:desc,now:!!now,ok:!!now||seen.indexOf(id)>=0});};
+  [[10,'Zehn Wörter sitzen'],[25,'25 Wörter sitzen'],[50,'50 Wörter sitzen'],[100,'100 Wörter sitzen']].forEach(function(x){add('w'+x[0],'Wörter',x[1],x[0]+' Wörter sind im Karteikasten mindestens in Fach 3.',sit>=x[0]);});
+  [[50,'50 richtige Antworten'],[250,'250 richtige Antworten'],[1000,'1000 richtige Antworten'],[2500,'2500 richtige Antworten']].forEach(function(x){add('a'+x[0],'Übung',x[1],x[0]+' richtige Antworten insgesamt.',ans>=x[0]);});
+  [[3,'Drei Tage in Folge'],[7,'Eine ganze Woche'],[14,'Zwei Wochen am Stück'],[30,'Ein Monat dranbleiben']].forEach(function(x){add('s'+x[0],'Serie',x[1],x[0]+' Tage hintereinander das Tagesziel geschafft.',st>=x[0]);});
+  add('t3','Probetest','Probetest bestanden','Im Probetest Note 3 oder besser.',state.tbest>0&&state.tbest<=3);
+  add('t2','Probetest','Probetest: gut','Im Probetest Note 2 oder besser.',state.tbest>0&&state.tbest<=2);
+  add('t1','Probetest','Probetest: sehr gut','Im Probetest Note 1.',state.tbest===1);
+  add('m1','Eselsbrücken','Eigene Eselsbrücke','Eine eigene Eselsbrücke aufgeschrieben.',mine>=1);
+  add('m10','Eselsbrücken','Zehn eigene Eselsbrücken','Zehn eigene Eselsbrücken aufgeschrieben.',mine>=10);
+  return L;
+}
+function newBadges(){return badgeList().filter(function(b){return b.now&&(state.bseen||[]).indexOf(b.id)<0;});}
+function badgesView(){
+  const L=badgeList(),n=L.filter(function(b){return b.ok;}).length;
+  const groups=[];L.forEach(function(b){if(groups.indexOf(b.g)<0)groups.push(b.g);});
+  return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="home">← Start</button><h1>Abzeichen</h1><p class="muted">'+n+' von '+L.length+' geschafft</p></div>'+
+    groups.map(function(g){return '<div><p class="eyebrow" style="margin-bottom:6px">'+esc(g)+'</p><div class="stack" style="gap:8px">'+L.filter(function(b){return b.g===g;}).map(function(b){
+      return '<div class="bdg'+(b.ok?'':' off')+'"><span class="bdot" aria-hidden="true">'+(b.ok?'✓':'')+'</span><div><b>'+esc(b.name)+'</b><div class="small muted">'+esc(b.desc)+'</div></div></div>';
+    }).join('')+'</div></div>';}).join('')+'</div>';
+}
+/* Probetest */
+const T_KEY=[[87,1],[73,2],[59,3],[45,4],[18,5]];
+function noteOf(p){for(let i=0;i<T_KEY.length;i++)if(p>=T_KEY[i][0])return T_KEY[i][1];return 6;}
+const fmtN=function(x){return String(x).replace('.',',');};
+function testSetup(){
+  const rows=state.sets.map(function(x){return {s:x,n:x.cards.filter(function(c){return !c.u;}).length};}).filter(function(x){return x.n>0;});
+  const tot=rows.reduce(function(a,x){return a+x.n;},0);
+  const sel=ui.tsel||{n:15,ids:null};
+  const isOn=function(id){return !sel.ids||sel.ids.indexOf(id)>=0;};
+  const top=topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="vocab">← Vokabeln</button><h1>Probetest</h1></div>';
+  if(tot<5)return top+'<div class="fb info">Für einen Probetest brauchst du mindestens 5 Wörter, die du schon gelernt hast. Lerne erst ein paar neue Wörter.</div></div>';
+  return top+
+    '<p class="muted">Wie in der Arbeit: Du siehst erst am Ende, was richtig war. Kein Hinweis, kein zweiter Versuch. Kleine Tippfehler zählen nur halb.</p>'+
+    '<div><p class="lab" style="margin-bottom:6px">Aus diesen Listen</p><div class="chks">'+rows.map(function(x){return '<label class="chk"><input type="checkbox" class="tsel" value="'+x.s.id+'"'+(isOn(x.s.id)?' checked':'')+'>'+esc(x.s.name)+' ('+x.n+' gelernt)</label>';}).join('')+'</div></div>'+
+    '<div><label class="lab" for="tn">Anzahl der Wörter</label><select id="tn" class="select">'+[10,15,20,30].map(function(n){return '<option value="'+n+'"'+(sel.n===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
+    (ui.terr?'<p class="err">'+esc(ui.terr)+'</p>':'')+
+    '<button class="btn block" data-a="tstart">Test starten</button></div>';
+}
+function testSession(){
+  const t=ui.tt,it=t.items[t.i],f=findCard(it.cid);
+  if(!f){tNext();return '';}
+  const c=f.c,sl=f.s,toDe=it.dir==='f2d',pct=Math.round(t.i/t.items.length*100);
+  return '<div class="stack" style="gap:20px"><div class="row between"><button class="link" data-a="tend">✕ Test abbrechen</button><span class="muted small">Frage '+(t.i+1)+' von '+t.items.length+'</span></div>'+
+    '<div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="card stack"><div class="eyebrow">'+(toDe?langName(sl.lang)+' → Deutsch':'Deutsch → '+langName(sl.lang))+'</div><div class="big">'+esc(toDe?c.fx:deShow(c.de))+'</div></div>'+
+    '<div class="stack" style="gap:10px"><input id="ans" class="input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Deine Antwort">'+
+    (!toDe&&sl.lang==='fr'?keysRow(['é','è','ê','à','â','ç','ô','î','û','ë','ï','ù','œ',"'"]):'')+'</div>'+
+    '<button class="btn block" data-a="tnext">'+(t.i===t.items.length-1?'Test abgeben':'Weiter')+'</button></div>';
+}
+function tNext(){
+  const t=ui.tt,it=t.items[t.i],f=findCard(it.cid);
+  it.got=($('ans')||{value:''}).value;
+  if(f){
+    const toDe=it.dir==='f2d',answer=toDe?f.c.de:f.c.fx,side=toDe?'de':f.s.lang;
+    const r=checkVocab(it.got,answer,side).r;
+    it.pts=r==='ok'?1:(r==='almost'?0.5:0);it.answer=answer;it.q=toDe?f.c.fx:deShow(f.c.de);
+  }else{it.pts=1;it.answer='';it.q='';}
+  t.i++;
+  if(t.i>=t.items.length){tFinish();return;}
+  ui.focus=true;window.scrollTo(0,0);render();
+}
+function tFinish(){
+  const t=ui.tt;let sum=0;
+  t.items.forEach(function(it){
+    sum+=it.pts;const f=findCard(it.cid);if(!f)return;
+    if(it.pts===0){f.c.box=1;f.c.due=0;f.c.f=(f.c.f||0)+1;}
+  });
+  const pct=Math.round(sum/t.items.length*100),note=noteOf(pct);
+  t.sum=sum;t.pct=pct;t.note=note;t.done=true;
+  if(!state.tbest||note<state.tbest)state.tbest=note;
+  state.tlog=(state.tlog||[]).concat([{d:dkey(),p:pct,n:note,c:t.items.length}]).slice(-10);
+  save();view='tres';window.scrollTo(0,0);render();
+}
+function testResult(){
+  const t=ui.tt,bad=t.items.filter(function(it){return it.pts<1;});
+  const msg=t.note<=2?'Stark!':t.note===3?'Gut gemacht.':t.note===4?'Geschafft, aber da geht noch was.':'Das üben wir noch. Genau dafür ist der Probetest da.';
+  return topBar()+'<div class="stack"><h1>Probetest geschafft</h1>'+
+    '<div class="card stack"><div class="big">Note '+t.note+'</div><p><b>'+fmtN(t.sum)+' von '+t.items.length+'</b> Punkten, das sind '+t.pct+' Prozent. '+msg+'</p><p class="small muted">Die Note ist nur eine grobe Einschätzung nach einem üblichen Schlüssel. Deine Lehrkraft kann anders rechnen.</p></div>'+
+    (bad.length?'<div><p class="eyebrow" style="margin-bottom:6px">Das war nicht (ganz) richtig</p><div class="words" style="max-height:none">'+bad.map(function(it){return '<div><span>'+esc(it.q)+'<br><span class="small muted">Du: '+esc(it.got||'–')+'</span></span><span><b>'+esc(String(it.answer).replace(/\s*\/\s*/g,' / '))+'</b></span></div>';}).join('')+'</div></div>':'<div class="fb good">Alles richtig.</div>')+
+    '<button class="btn block" data-a="go" data-v="vocab">Zu den Listen</button></div>';
+}
+/* Wochenblick (für Eltern) */
+function weekView(){
+  const d=new Date(),cols=[],nm=['So','Mo','Di','Mi','Do','Fr','Sa'];
+  let act=0,hit=0,tot=0,mx=Math.max(1,state.goal);
+  for(let i=6;i>=0;i--){
+    const x=new Date(d);x.setDate(d.getDate()-i);
+    const c=(state.days[dkey(x)]||{c:0}).c;
+    cols.push({n:nm[x.getDay()],c:c});
+    if(c>0)act++;if(c>=state.goal)hit++;tot+=c;if(c>mx)mx=c;
+  }
+  let learned=0,sit=0,all=0;
+  state.sets.forEach(function(x){x.cards.forEach(function(c){all++;if(!c.u){learned++;if(c.box>=3)sit++;}});});
+  const kn=knackList(),tl=(state.tlog||[]).slice(-5).reverse();
+  const topics=TOPICS.filter(function(t){const m=state.math[t.id];return m&&((m.level||1)>1||(m.clean||0)>0||(m.fail||0)>0);});
+  return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="settings">← Einstellungen</button><h1>Wochenblick</h1><p class="muted">Für ein Gespräch gedacht, nicht zum Kontrollieren.</p></div>'+
+    '<div class="card stack"><h3>Letzte 7 Tage</h3><div class="wk">'+cols.map(function(c){return '<div class="wkc'+(c.c>=state.goal?' hit':'')+'"><b>'+c.c+'</b><div class="wkb"><i style="height:'+Math.round(c.c/mx*100)+'%"></i></div><span>'+c.n+'</span></div>';}).join('')+'</div>'+
+    '<p class="small muted">An '+act+' von 7 Tagen geübt, Tagesziel ('+state.goal+') an '+hit+' Tagen geschafft, '+tot+' richtige Antworten.</p></div>'+
+    '<div class="card stack"><h3>Wörter</h3><p>'+learned+' von '+all+' Wörtern schon kennengelernt, davon '+sit+' im Karteikasten ab Fach 3.</p>'+
+    (kn.length?'<p class="eyebrow">Knacknüsse</p><div class="words" style="max-height:none">'+kn.slice(0,8).map(function(x){return '<div><span>'+esc(x.c.fx)+'</span><span class="muted">'+esc(deShow(x.c.de))+'</span></div>';}).join('')+'</div>':'<p class="small muted">Keine Knacknüsse im Moment.</p>')+'</div>'+
+    '<div class="card stack"><h3>Probetests</h3>'+(tl.length?'<div class="words" style="max-height:none">'+tl.map(function(x){return '<div><span>'+esc(x.d.slice(8,10)+'.'+x.d.slice(5,7)+'.')+' · '+x.c+' Wörter</span><span><b>Note '+x.n+'</b> ('+x.p+' %)</span></div>';}).join('')+'</div>':'<p class="small muted">Noch kein Probetest gemacht.</p>')+'</div>'+
+    (topics.length?'<div class="card stack"><h3>Mathe</h3><div class="words" style="max-height:none">'+topics.map(function(t){const m=state.math[t.id];return '<div><span>'+esc(t.name)+'</span><span class="muted">Stufe '+(m.level||1)+'</span></div>';}).join('')+'</div></div>':'')+
+  '</div>';
+}
+
 function home(){
   const c=todayCount(),g=state.goal,C=213.6,dash=C*Math.min(1,c/g);
   const li=levelInfo(),st=streak();
-  const fl=ui.flash||'';ui.flash='';
+  let fl=ui.flash||'';ui.flash='';
+  const nbd=newBadges();
+  if(nbd.length){fl+=(fl?' ':'')+'Neues Abzeichen: '+nbd.map(function(b){return b.name;}).join(', ')+'.';state.bseen=(state.bseen||[]).concat(nbd.map(function(b){return b.id;}));save();}
   const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
   const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   let first='';
@@ -899,7 +1095,7 @@ function home(){
       '<button class="tile mark" data-a="go" data-v="vocab"><span class="t">Vokabeln</span><span class="s">'+(!state.sets.length?'Lege deine erste Liste an':due?due+' Karten warten auf dich':newN?newN+' neue Wörter zum Lernen':'Heute ist alles wiederholt')+'</span></button>'+
       '<button class="tile" data-a="go" data-v="math"><span class="t">Mathe</span><span class="s">'+visibleTopics().length+' Themen, mit Tipps</span></button>'+
     '</div>'+
-    '<div class="row" style="gap:20px"><button class="link" data-a="go" data-v="exams">Arbeit eintragen</button><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
+    '<div class="row" style="gap:20px"><button class="link" data-a="go" data-v="exams">Arbeit eintragen</button><button class="link" data-a="go" data-v="badges">Abzeichen</button><button class="link" data-a="go" data-v="settings">Einstellungen</button></div>'+
   '</div>';
 }
 
@@ -908,7 +1104,7 @@ function vocabList(){
   const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
   return topBar()+'<div class="stack"><h1>Vokabeln</h1>'+
     (!state.sets.length?'<div class="card stack"><h3>Noch keine Liste</h3><p class="muted">Lege eine Liste an und trage die W\u00F6rter aus dem Buch ein. Eine Zeile pro Wort, zum Beispiel: to borrow = ausleihen</p></div>':(due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten wiederholen ('+due+')</button>':'')+(newN?'<button class="btn'+(due?' ghost':'')+' block" data-a="vstart" data-s="all" data-n="1">Neue Wörter lernen ('+Math.min(NEWMAX,newN)+' von '+newN+')</button>':'')+(!due&&!newN?'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>':''))+
-    '<div class="list">'+state.sets.map(function(s){
+    extraVocabHtml()+'<div class="list">'+state.sets.map(function(s){
       return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+(newCount(s)?'<span class="badge">'+newCount(s)+' neu</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
     }).join('')+'</div>'+
     '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+vocabTips()+
@@ -950,12 +1146,12 @@ function vocabIntro(){
   return '<div class="stack" style="gap:16px"><div class="row between"><button class="link" data-a="vend">✕ Beenden</button><span class="muted small">Neue Wörter: '+(vs.ii+1)+' von '+n+'</span></div>'+
     '<div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div>'+
     '<p class="muted small">Lies das Wort, hör es dir an und sprich es einmal laut nach. Danach wirst du abgefragt.</p>'+
-    (f?cardFace(f.c,f.s,true):'')+
+    (f?cardFace(f.c,f.s,true,true):'')+
     '<div class="row"><button class="btn ghost" data-a="vintroback"'+(vs.ii?'':' disabled')+'>Zurück</button><button class="btn" style="flex:1" id="nextbtn" data-a="vintronext">'+(last?'Jetzt abfragen':'Weiter')+'</button></div></div>';
 }
 
 function vocabSession(){
-  const vs=ui.vs,q=vs.queue[0];
+  const vs=ui.vs;
   const remaining=new Set(vs.queue.map(function(x){return x.cid;})).size;
   const pct=Math.round((vs.total-remaining)/vs.total*100);
   const head='<div class="stack" style="gap:10px"><div class="row between"><button class="link" data-a="vend">✕ Beenden</button><span class="muted small">'+(vs.total-remaining)+' von '+vs.total+' geschafft</span></div><div class="bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100"><i style="width:'+pct+'%"></i></div></div>';
@@ -963,12 +1159,26 @@ function vocabSession(){
     const f=vs.fb;
     return '<div class="stack" style="gap:20px">'+head+'<div class="card stack"><div class="eyebrow">'+esc(vs.dirLabel)+'</div><div class="big">'+esc(vs.promptShown)+'</div></div>'+
       '<div class="fb '+(f.ok?'good':'bad')+'">'+(f.ok?f.text:'Richtig wäre: <span style="font-size:20px">'+esc(f.answer)+'</span><br><span class="small">'+(f.requeued?'Die Karte kommt gleich noch einmal.':'')+'</span>')+'</div>'+
-      (vs.fbCard?cardFace(vs.fbCard.c,vs.fbCard.s,false):'')+
+      (vs.fbCard?cardFace(vs.fbCard.c,vs.fbCard.s,false,!f.ok):'')+
       '<button class="btn block" id="nextbtn" data-a="vnext">Weiter</button></div>';
   }
   const cur=vs.cur;
-  return '<div class="stack" style="gap:20px">'+head+
-    '<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div class="big" style="min-width:0">'+esc(cur.prompt)+'</div>'+(cur.toDe?sayBtn(cur.card.id,'w','Wort anhören'):'')+'</div>'+(cur.toDe&&cur.card.ipa?'<div class="ipa">['+esc(cur.card.ipa)+']</div>':'')+(vs.hint?'<p class="muted">Anfang: <b>'+esc(vs.hint)+'</b></p>':'')+'</div>'+
+  if(cur.type==='mc'){
+    return '<div class="stack" style="gap:20px">'+head+
+      '<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="big">'+esc(cur.prompt)+'</div></div>'+
+      '<div class="opts">'+cur.opts.map(function(o,i){return '<button type="button" class="opt" data-a="vpick" data-i="'+i+'">'+esc(o.t)+'</button>';}).join('')+'</div>'+
+      '<div class="row"><button class="btn ghost" data-a="vskip">Weiß nicht</button></div></div>';
+  }
+  const hintLine=vs.hint?'<p class="muted">Anfang: <b>'+esc(vs.hint)+'</b></p>':'';
+  let top;
+  if(cur.type==='gap'){
+    top='<div class="card stack"><div class="eyebrow">Lückensatz</div><div style="font-size:22px;line-height:1.4;font-weight:600">'+esc(cur.prompt)+'</div><p class="muted">Gesucht: '+esc(cur.gapHint)+'</p>'+hintLine+'</div>';
+  }else if(cur.type==='listen'){
+    top='<div class="card stack"><div class="eyebrow">Hören</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:center"><div class="big" style="min-width:0">Hör zu und schreib das Wort auf</div>'+sayBtn(cur.card.id,'w','Wort anhören')+'</div>'+hintLine+'</div>';
+  }else{
+    top='<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div class="big" style="min-width:0">'+esc(cur.prompt)+'</div>'+(cur.toDe?sayBtn(cur.card.id,'w','Wort anhören'):'')+'</div>'+(cur.toDe&&cur.card.ipa?'<div class="ipa">['+esc(cur.card.ipa)+']</div>':'')+hintLine+'</div>';
+  }
+  return '<div class="stack" style="gap:20px">'+head+top+
     '<div class="stack" style="gap:10px"><input id="ans" class="input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Deine Antwort" value="'+esc(vs.keep||'')+'">'+
     (cur.side==='fr'?keysRow(['é','è','ê','à','â','ç','ô','î','û','ë','ï','ù','œ',"'"]):'')+
     (vs.msg?'<div class="fb info">'+esc(vs.msg)+'</div>':'')+'</div>'+
@@ -1018,10 +1228,12 @@ function settings(){
     '<div><label class="lab" for="sname">Name</label><input id="sname" class="input" maxlength="24" value="'+esc(state.name)+'"></div>'+
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
     '<div><p class="lab" style="margin-bottom:6px">Mathe-Themen, die angezeigt werden</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" class="settop" value="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div><p class="small muted" style="margin-top:6px">Ausgeblendete Themen bleiben gespeichert und kommen zur\u00FCck, wenn du sie wieder ausw\u00E4hlst.</p></div>'+(ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
+    '<div><p class="lab" style="margin-bottom:6px">Beim Vokabellernen</p><div class="chks"><label class="chk"><input type="checkbox" id="smn"'+(state.mnOn?' checked':'')+'>Eselsbrücken anzeigen</label><label class="chk"><input type="checkbox" id="svar"'+(state.varied!==false?' checked':'')+'>Abwechslung bei den Aufgaben (Auswahl, Lückensatz, Hören)</label></div><p class="small muted" style="margin-top:6px">Eselsbrücken helfen am meisten, wenn du erst selbst überlegst. Sie erscheinen beim ersten Kennenlernen und nach einer falschen Antwort.</p></div>'+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
+    '<button class="btn ghost block" data-a="go" data-v="week">Wochenblick für Eltern</button>'+
     (syncAvail()?'<button class="btn ghost block" data-a="go" data-v="sync">Auf mehreren Geräten lernen (Online-Abgleich)</button>':'')+
     '<button class="btn ghost block" data-a="go" data-v="backup">Fortschritt als Code sichern</button>'+
-    '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen werden nur in diesem Browser auf diesem Gerät gespeichert. Auf einem anderen Gerät startet die App bei null. Eigene Vokabellisten legst du unter Vokabeln an.</p><p class="small muted" style="margin-top:8px">So ist die App aufgebaut: Antworten selbst aus dem Kopf holen statt nur lesen, Wiederholen in wachsenden Abst\u00E4nden (Karteikasten), Tipps vor der L\u00F6sung, Erkl\u00E4rungen mit Beispielen zum Mitrechnen, gemischte Themen und kurze Einheiten. Sie ersetzt keinen Unterricht. Wenn ein Thema gar nicht ankommt, hilft ein kurzes Gespr\u00E4ch mit der Lehrkraft oder mit dir oft mehr als weiteres \u00DCben.</p></div>'+
+    '<div class="card stack"><h3>Für Eltern</h3><p class="small muted">Fortschritt, Punkte und eigene Listen liegen auf diesem Gerät. Mit dem Online-Abgleich oder dem Sicherungscode nimmst du sie auf ein anderes Gerät mit. Eigene Vokabellisten legst du unter Vokabeln an.</p><p class="small muted" style="margin-top:8px">So ist die App aufgebaut: Antworten selbst aus dem Kopf holen statt nur lesen, Wiederholen in wachsenden Abst\u00E4nden (Karteikasten), Tipps vor der L\u00F6sung, Erkl\u00E4rungen mit Beispielen zum Mitrechnen, gemischte Themen und kurze Einheiten. Sie ersetzt keinen Unterricht. Wenn ein Thema gar nicht ankommt, hilft ein kurzes Gespr\u00E4ch mit der Lehrkraft oder mit dir oft mehr als weiteres \u00DCben.</p></div>'+
     (ui.confirmReset?'<div class="fb bad stack" style="gap:10px">Alles zurücksetzen? Punkte, Serie und Listen sind danach weg.'+(syncOn()?' Das gilt auch für alle verbundenen Geräte.':'')+'<div class="row"><button class="btn danger small" data-a="resetyes">Ja, zurücksetzen</button><button class="btn ghost small" data-a="resetno">Abbrechen</button></div></div>':'<button class="btn ghost danger block" data-a="reset">Alles zurücksetzen</button>')+
   '</div>';
 }
@@ -1327,7 +1539,7 @@ function vocabTips(){
 
 /* ---------- Render ---------- */
 function render(){
-  const inSession=view==='vsess'||view==='vintro'||view==='msess';
+  const inSession=view==='vsess'||view==='vintro'||view==='msess'||view==='tsess';
   let html='';
   if(view==='home')html=home();
   else if(view==='vocab')html=vocabList();
@@ -1343,14 +1555,22 @@ function render(){
   else if(view==='sync')html=syncView();
   else if(view==='exams')html=examsView();
   else if(view==='explain')html=explainView();
+  else if(view==='badges')html=badgesView();
+  else if(view==='week')html=weekView();
+  else if(view==='ttest')html=testSetup();
+  else if(view==='tsess')html=testSession();
+  else if(view==='tres')html=testResult();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup'||view==='sync')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup'||view==='sync'||view==='badges'||view==='week')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
   const nb=$('nextbtn');if(nb&&ui.focus)nb.focus();
   ui.focus=false;
+  if(view==='vsess'&&ui.vs&&ui.vs.speakPending&&ui.vs.phase==='ask'&&ui.vs.cur&&ui.vs.cur.type==='listen'){
+    ui.vs.speakPending=false;speak(spokenWord(ui.vs.cur.card),ui.vs.cur.set.lang==='fr'?'fr-FR':'en-GB',0.8);
+  }
 }
 function go(v){
   ui.confirmDel=false;ui.confirmReset=false;ui.delEx=null;if(v==='exams')ui.ex=null;ui.setErr='';if(v==='backup')ui.bk={code:'',imp:'',err:'',pend:null,msg:''};if(v==='sync')ui.sy=freshSy();
@@ -1360,7 +1580,10 @@ function go(v){
 /* ---------- Vokabeln: Ablauf ---------- */
 function startVocab(scope,force,newOnly){
   let pool=[],examId=null,phase='';
-  if(scope.indexOf('exam:')===0){
+  if(scope==='knack')force=true;
+  if(scope==='knack'){
+    knackList().forEach(function(x){pool.push(x);});
+  }else if(scope.indexOf('exam:')===0){
     const e=getExam(scope.slice(5));
     if(!e){go('exams');return;}
     examId=e.id;pool=examCardsOf(e);phase=examPlan(e).pl.phase;
@@ -1397,7 +1620,19 @@ function prepVocab(){
   const vs=ui.vs,q=vs.queue[0];if(!q)return;
   const set=getSet(q.sid),card=set.cards.find(function(c){return c.id===q.cid;});
   const toDe=q.dir==='f2d';
-  vs.cur={prompt:toDe?card.fx:deShow(card.de),toDe:toDe,set:set,answer:toDe?card.de:card.fx,side:toDe?'de':set.lang,dirLabel:toDe?langName(set.lang)+' → Deutsch':'Deutsch → '+langName(set.lang),card:card};
+  const type=q.failed?'type':pickType(card,set,toDe);
+  const cur={prompt:toDe?card.fx:deShow(card.de),toDe:toDe,set:set,answer:toDe?card.de:card.fx,side:toDe?'de':set.lang,dirLabel:toDe?langName(set.lang)+' → Deutsch':'Deutsch → '+langName(set.lang),card:card,type:'type'};
+  if(type==='mc'){
+    const o=mcOptions(card,set,toDe);
+    if(o){cur.type='mc';cur.opts=o;}
+  }else if(type==='gap'){
+    const g=gapOf(card);
+    if(g){cur.type='gap';cur.prompt=String(card.ex).replace(/\*[^*]+\*/,'_____').replace(/\*/g,'');cur.answer=g;cur.side=set.lang;cur.toDe=false;cur.dirLabel='Lückensatz';cur.gapHint=deShow(card.de);}
+  }else if(type==='listen'){
+    cur.type='listen';cur.prompt='Hör zu und schreib das Wort auf';cur.answer=card.fx;cur.side=set.lang;cur.toDe=false;cur.dirLabel='Hören';
+  }
+  vs.cur=cur;
+  vs.speakPending=(cur.type==='listen');
   vs.retried=false;vs.hinted=false;vs.hint='';vs.keep='';vs.msg='';
 }
 function vFinish(ok,text){
@@ -1406,11 +1641,11 @@ function vFinish(ok,text){
   vs.queue.shift();
   let requeued=false;
   if(ok){
-    gain=vs.hinted?5:vs.retried?6:10;
+    gain=vs.hinted?5:vs.retried?6:(cur.type==='mc'?6:10);
     if(!q.failed){
       if(!vs.hinted&&!vs.retried){
         vs.correct++;if(vs.examId)addExamProg(vs.examId);
-        card.box=Math.min(5,card.box+1);
+        card.box=Math.min(5,card.box+1);if(card.box>=4)card.f=0;
         card.due=todayStart()+INTERVAL[card.box]*DAY;
       }else{
         card.due=todayStart()+DAY;
@@ -1420,7 +1655,7 @@ function vFinish(ok,text){
   }else{
     card.box=1;card.due=0;
     if(!q.failed){
-      q.failed=true;requeued=true;
+      q.failed=true;requeued=true;card.f=(card.f||0)+1;
       vs.missed.push({fx:card.fx,de:card.de});
       vs.queue.splice(Math.min(3,vs.queue.length),0,q);
     }
@@ -1441,7 +1676,7 @@ function vCheck(){
 function vNext(){
   const vs=ui.vs;
   if(!vs.queue.length){view='vres';window.scrollTo(0,0);render();return;}
-  vs.phase='ask';prepVocab();ui.focus=true;render();
+  ui.my=null;vs.phase='ask';prepVocab();ui.focus=true;render();
 }
 
 /* ---------- Mathe: Ablauf ---------- */
@@ -1549,13 +1784,29 @@ document.addEventListener('click',function(ev){
     case 'vcheck':vCheck();break;
     case 'vhint':{const vs=ui.vs;const alt=String(vs.cur.answer).split(/[\/;]/)[0].trim();vs.hint=alt.slice(0,1)+' …';vs.hinted=true;vs.keep=$('ans').value;ui.focus=true;render();break;}
     case 'vskip':vFinish(false);break;
+    case 'vpick':{const vs=ui.vs;if(!vs||vs.phase!=='ask'||!vs.cur||vs.cur.type!=='mc')break;const o=vs.cur.opts[parseInt(t.dataset.i,10)];if(!o)break;vFinish(o.ok,'Richtig!');break;}
+    case 'myedit':{const f=findCard(t.dataset.c);if(!f)break;ui.my={cid:f.c.id,txt:f.c.my||''};render();break;}
+    case 'mysave':{const f=findCard(t.dataset.c),ta=$('myin');if(f&&ta){const v=ta.value.trim().slice(0,160);if(v)f.c.my=v;else delete f.c.my;save();}ui.my=null;render();break;}
+    case 'mycancel':ui.my=null;render();break;
+    case 'tstart':{
+      const ids=Array.prototype.map.call(document.querySelectorAll('.tsel:checked'),function(i){return i.value;});
+      const n=parseInt($('tn').value,10)||15;
+      ui.tsel={ids:ids,n:n};
+      const pool=[];
+      state.sets.forEach(function(x){if(ids.indexOf(x.id)>=0)x.cards.forEach(function(c){if(!c.u)pool.push({s:x,c:c});});});
+      if(pool.length<5){ui.terr='Wähle Listen mit insgesamt mindestens 5 gelernten Wörtern.';render();break;}
+      ui.terr='';
+      const items=shuffle(pool).slice(0,Math.min(n,pool.length)).map(function(x){return {sid:x.s.id,cid:x.c.id,dir:(state.vdir==='mixed'?(Math.random()<0.5?'d2f':'f2d'):state.vdir),got:'',pts:0};});
+      ui.tt={items:items,i:0,done:false};view='tsess';window.scrollTo(0,0);ui.focus=true;render();break;}
+    case 'tnext':if(ui.tt&&!ui.tt.done)tNext();break;
+    case 'tend':ui.tt=null;go('vocab');break;
     case 'vnext':vNext();break;
     case 'vintronext':{
       const vs=ui.vs;
-      if(vs.ii<vs.intro.length-1){vs.ii++;}
+      ui.my=null;if(vs.ii<vs.intro.length-1){vs.ii++;}
       else{vs.intro.forEach(function(x){const f=findCard(x.cid);if(f)delete f.c.u;});save();view='vsess';}
       window.scrollTo(0,0);ui.focus=true;render();break;}
-    case 'vintroback':{const vs=ui.vs;if(vs.ii>0){vs.ii--;window.scrollTo(0,0);render();}break;}
+    case 'vintroback':{const vs=ui.vs;ui.my=null;if(vs.ii>0){vs.ii--;window.scrollTo(0,0);render();}break;}
     case 'say':{
       const f=findCard(t.dataset.c);if(!f)break;
       if(t.dataset.w==='s')speak(String(f.c.ex||'').replace(/\*/g,''),f.s.lang==='fr'?'fr-FR':'en-GB',0.85);
@@ -1597,7 +1848,7 @@ document.addEventListener('click',function(ev){
       const sel=Array.prototype.map.call(document.querySelectorAll('.settop:checked'),function(i){return i.value;});
       if(!sel.length){ui.setErr='Mindestens ein Mathe-Thema muss sichtbar bleiben.';render();break;}
       ui.setErr='';state.hiddenTopics=TOPICS.map(function(t){return t.id;}).filter(function(id){return sel.indexOf(id)<0;});
-      const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;save();go('home');break;}
+      const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;state.mnOn=!!$('smn').checked;state.varied=!!$('svar').checked;save();go('home');break;}
     case 'bkmake':{bkRead();ui.bk.code=makeCode();ui.bk.msg='';state.lastBackup=dkey();save();render();break;}
     case 'bkcopy':{
       bkRead();
@@ -1647,7 +1898,9 @@ document.addEventListener('change',function(ev){
 });
 document.addEventListener('keydown',function(ev){
   if(ev.key!=='Enter')return;
-  if(view==='vsess'){
+  if(view==='tsess'){
+    if(ev.target.id==='ans'&&ui.tt&&!ui.tt.done){ev.preventDefault();tNext();}
+  }else if(view==='vsess'){
     const vs=ui.vs;
     if(vs.phase==='ask'&&ev.target.id==='ans'){ev.preventDefault();vCheck();}
   }else if(view==='msess'){

@@ -1,5 +1,5 @@
 /* Lernheft: App-Hülle offline verfügbar machen. Online-Abgleich (Firebase) wird nie zwischengespeichert. */
-const CACHE = 'lernheft-shell-v1';
+const CACHE = 'lernheft-shell-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon-32.png'];
 
 self.addEventListener('install', function (e) {
@@ -21,13 +21,18 @@ self.addEventListener('fetch', function (e) {
   if (!sameOrigin && !fonts) return; // Firebase & Co. gehen direkt ins Netz
 
   if (req.mode === 'navigate') {
-    // Seite: erst Netz (damit Updates ankommen), sonst gespeicherte Version
-    e.respondWith(fetch(req).then(function (res) {
+    // Seite: erst Netz (damit Updates ankommen). Antwortet es nicht innerhalb von 3 Sekunden
+    // (schlechtes Netz), kommt die gespeicherte Version, damit die App nicht hängt.
+    const fromCache = function () { return caches.match('./index.html').then(function (m) { return m || caches.match('./'); }); };
+    const net = fetch(req).then(function (res) {
       const copy = res.clone();
       caches.open(CACHE).then(function (c) { c.put('./index.html', copy); });
       return res;
-    }).catch(function () {
-      return caches.match('./index.html').then(function (m) { return m || caches.match('./'); });
+    });
+    const late = new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 3000); });
+    e.respondWith(Promise.race([net.catch(function () { return null; }), late]).then(function (res) {
+      if (res) return res;
+      return fromCache().then(function (m) { return m || net; });
     }));
     return;
   }

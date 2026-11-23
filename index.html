@@ -246,7 +246,7 @@ function genProz(l){
       return {q:'Ein Fahrrad kostet '+G+' €. Du bekommst '+p+' % Rabatt. Wie viel Euro sparst du?',unit:'€',pre:'',kind:'num',ans:W,tips:[t1,t2],sol:t2+' Ergebnis: '+fmt(W)+' €'};
     }
     if(t==='satz'){
-      const G=pick([20,40,50,100,200]),p=pick(ps.concat([35,45,55,65])),W=G*p/100;
+      let G,p,W;do{G=pick([20,40,50,100,200]);p=pick(ps.concat([35,45,55,65]));W=G*p/100;}while(W%1!==0);
       const t1='Rechne aus, wie viel 1 % ist. Dann prüfe, wie oft das in den Teil passt.';
       const t2='1 % von '+G+' sind '+fmt(G/100)+'. Wie oft passt '+fmt(G/100)+' in '+fmt(W)+'?';
       return {q:'Von '+G+' Kindern bringen '+W+' ein Haustier mit. Wie viel Prozent sind das?',unit:'%',pre:'',kind:'num',ans:p,tips:[t1,t2],sol:t2+' Ergebnis: '+p+' %'};
@@ -344,9 +344,9 @@ function genZuo(l){
     return {q:a+' Brötchen kosten '+eur(a*pu)+'. Wie viel kosten '+b+' Brötchen?',unit:'€',pre:'',kind:'num',ans:round2(b*pu),tips:[t1,t2],sol:t2+' Ergebnis: '+eur(b*pu)};
   }
   function anti(){
-    const it=pick([['Maler','ein Haus streichen','Tage'],['Pumpen','ein Becken leeren','Stunden'],['Bagger','eine Baugrube ausheben','Tage'],['Helfer','eine Turnhalle aufräumen','Stunden']]);
+    const it=pick([['Maler','ein Haus zu streichen','Tage'],['Pumpen','ein Becken zu leeren','Stunden'],['Bagger','eine Baugrube auszuheben','Tage'],['Helfer','eine Turnhalle aufzuräumen','Stunden']]);
     let a,d,total,opts;
-    do{a=ri(2,6);d=ri(4,12);total=a*d;opts=[];for(let k=1;k<=12;k++){if(total%k===0&&k!==a)opts.push(k);}}while(!opts.length);
+    do{a=ri(2,6);d=ri(4,12);total=a*d;opts=[];for(let k=1;k<=12;k++){if(total%k===0&&k!==a&&k>1)opts.push(k);}}while(!opts.length);
     const b=pick(opts),res=total/b;
     const t1='Je mehr '+it[0]+', desto weniger Zeit. Das Produkt aus Anzahl und Zeit bleibt gleich.';
     const t2=a+' · '+d+' = '+total+'. Teile das durch '+b+'.';
@@ -373,7 +373,7 @@ function genZuo(l){
 
 function genWink(l){
   if(l===1){
-    const a=ri(30,90),b=ri(30,90);
+    let a,b;do{a=ri(30,90);b=ri(30,90);}while(180-a-b<15);
     const g=180-a-b;
     const t1='Die drei Winkel im Dreieck sind zusammen 180°.';
     const t2=a+' + '+b+' = '+(a+b)+'. Ziehe das von 180 ab.';
@@ -627,20 +627,21 @@ const PRESETS=[{"id":"a3u1-a1","name":"U1 · Part A · 1 (S. 227)","lang":"en","
 function defaultState(){
   return {name:'',goal:10,points:0,days:{},vdir:'mixed',sets:[],math:{},exams:[],hiddenTopics:['proz','gl','term','zuo','wink'],presetSeen:[],vlang:'en',mnOn:false,varied:true,bseen:[],tbest:0,tlog:[]};
 }
+function presetCard(p,i,pc){
+  const c=p.cards[i],id=p.id+'-'+i,o={id:id,fx:c[0],de:c[1],box:1,due:0,u:1};
+  if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];if(c[5])o.mn=c[5];
+  const q=pc&&pc[id];
+  if(q){o.box=q[0];o.due=q[1];if(!q[2])delete o.u;if(q[3])o.my=q[3];if(q[4])o.f=q[4];}
+  return o;
+}
 function buildPreset(p,pc){
-  return {id:p.id,name:p.name,lang:p.lang||'en',builtin:false,preset:true,cards:p.cards.map(function(c,i){
-    const id=p.id+'-'+i,o={id:id,fx:c[0],de:c[1],box:1,due:0,u:1};
-    if(c[2])o.ipa=c[2];if(c[3])o.ex=c[3];if(c[4])o.nt=c[4];if(c[5])o.mn=c[5];
-    const q=pc&&pc[id];
-    if(q){o.box=q[0];o.due=q[1];if(!q[2])delete o.u;if(q[3])o.my=q[3];if(q[4])o.f=q[4];}
-    return o;
-  })};
+  return {id:p.id,name:p.name,lang:p.lang||'en',builtin:false,preset:true,pn:p.cards.length,cards:p.cards.map(function(c,i){return presetCard(p,i,pc);})};
 }
 /* Sicherungs-Code: Fortschritt als Text, damit er auf ein anderes Gerät mitgenommen werden kann */
 const B64=function(x){return btoa(unescape(encodeURIComponent(x)));};
 const UN64=function(x){return decodeURIComponent(escape(atob(x)));};
 function makeCode(){
-  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,mnOn:!!state.mnOn,varied:state.varied!==false,bseen:state.bseen||[],tbest:state.tbest||0,tlog:state.tlog||[],ps:[],pc:{},us:[]};
+  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,mnOn:!!state.mnOn,varied:state.varied!==false,bseen:state.bseen||[],tbest:state.tbest||0,tlog:state.tlog,vsort:state.vsort||'new',hs:state.sets.filter(function(x){return x.preset&&x.hidden;}).map(function(x){return x.id;})||[],ps:[],pc:{},us:[]};
   state.sets.forEach(function(s){
     const pd=s.preset&&PRESETS.find(function(p){return p.id===s.id;});
     const same=pd&&pd.cards.length===s.cards.length&&s.cards.every(function(c,i){return c.id===s.id+'-'+i&&c.fx===pd.cards[i][0]&&c.de===pd.cards[i][1];});
@@ -662,10 +663,10 @@ function parseCode(txt){
 }
 function stateFromCode(o){
   const st=defaultState();
-  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped','mnOn','varied','bseen','tbest','tlog'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
+  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped','mnOn','varied','bseen','tbest','tlog','vsort'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
   st.presetSeen=Array.isArray(o.presetSeen)?o.presetSeen:[];
   st.sets=[];
-  (o.ps||[]).forEach(function(id){const p=PRESETS.find(function(x){return x.id===id;});if(p)st.sets.push(buildPreset(p,o.pc||{}));});
+  (o.ps||[]).forEach(function(id){const p=PRESETS.find(function(x){return x.id===id;});if(p){const b=buildPreset(p,o.pc||{});if((o.hs||[]).indexOf(id)>=0)b.hidden=true;st.sets.push(b);}});
   (o.us||[]).forEach(function(x){st.sets.push(x);});
   return migrate(st);
 }
@@ -692,7 +693,19 @@ function migrate(st){
   st.sets.forEach(function(x){
     if(!x.preset)return;
     const p=PRESETS.find(function(y){return y.id===x.id;});if(!p)return;
-    x.cards.forEach(function(c,i){const d=p.cards[i];if(d&&c.fx===d[0]){if(d[5])c.mn=d[5];else delete c.mn;}});
+    /* Eine Karte mit Preset-Nummer als Kennung wurde nie bearbeitet (Bearbeiten legt eine neue Karte an).
+       Ihr Inhalt wird deshalb mit der aktuellen Vorlage abgeglichen; der Lernstand bleibt. */
+    const have={};
+    x.cards.forEach(function(c){
+      have[c.id]=1;
+      if(c.id.indexOf(p.id+'-')!==0)return;
+      const d=p.cards[parseInt(c.id.slice(p.id.length+1),10)];if(!d)return;
+      c.fx=d[0];c.de=d[1];
+      ['ipa','ex','nt','mn'].forEach(function(k,j){if(d[j+2])c[k]=d[j+2];else delete c[k];});
+    });
+    const pn=typeof x.pn==='number'?x.pn:p.cards.length;
+    for(let i=pn;i<p.cards.length;i++)if(!have[p.id+'-'+i])x.cards.push(presetCard(p,i));
+    x.pn=p.cards.length;
   });
   return st;
 }
@@ -916,7 +929,7 @@ function mnHtml(c){
 const isKnack=function(c){return !c.u&&(c.f||0)>=2&&c.box<=3;};
 function knackList(){
   const out=[];
-  state.sets.forEach(function(s){s.cards.forEach(function(c){if(isKnack(c))out.push({s:s,c:c});});});
+  state.sets.forEach(function(s){if(s.hidden)return;s.cards.forEach(function(c){if(isKnack(c))out.push({s:s,c:c});});});
   return out;
 }
 function extraVocabHtml(){
@@ -930,11 +943,24 @@ function extraVocabHtml(){
   return h;
 }
 /* Mehrfachauswahl: falsche Antworten aus anderen Karten derselben Sprache */
+/* Andere Karten derselben Sprache mit gleicher deutscher Bedeutung (z. B. western und west = westlich) */
+function sameDe(card,set){
+  const mine=altsOf(card.de),out=[];
+  state.sets.forEach(function(x){
+    if(x.lang!==set.lang)return;
+    x.cards.forEach(function(c){if(c.id!==card.id&&altsOf(c.de).some(function(a){return mine.indexOf(a)>=0;}))out.push(c);});
+  });
+  return out;
+}
+function voiceOk(lang){
+  try{const vs=window.speechSynthesis.getVoices()||[];if(!vs.length)return true;const l=lang.slice(0,2);return vs.some(function(v){return v.lang&&v.lang.toLowerCase().indexOf(l)===0;});}catch(e){return true;}
+}
 function mcOptions(card,set,toDe){
   const lab=function(c){return toDe?deShow(c.de):String(c.fx).split(/\s*\/\s*/).join(' / ');};
   const right=lab(card),seen={};seen[right.toLowerCase()]=1;
   let pool=[];
-  state.sets.forEach(function(x){if(x.lang===set.lang)x.cards.forEach(function(c){if(c.id!==card.id)pool.push(c);});});
+  const twins=sameDe(card,set).map(function(c){return c.id;});
+  state.sets.forEach(function(x){if(x.lang===set.lang)x.cards.forEach(function(c){if(c.id!==card.id&&twins.indexOf(c.id)<0)pool.push(c);});});
   const known=pool.filter(function(c){return !c.u;});
   pool=shuffle(known.length>=6?known:pool);
   const out=[];
@@ -957,7 +983,7 @@ function pickType(card,set,toDe){
   const r=Math.random();
   if(card.box<=2)return r<0.55?'mc':'type';
   if(r<0.30&&gapOf(card))return 'gap';
-  if(r<0.55&&canSpeak()&&checkVocab(spokenWord(card),card.fx,set.lang).r==='ok')return 'listen';
+  if(r<0.55&&canSpeak()&&!(ui.vs&&ui.vs.noListen)&&voiceOk(set.lang)&&checkVocab(spokenWord(card),card.fx,set.lang).r==='ok')return 'listen';
   return 'type';
 }
 /* Abzeichen */
@@ -1077,8 +1103,8 @@ function home(){
   let fl=ui.flash||'';ui.flash='';
   const nbd=newBadges();
   if(nbd.length){fl+=(fl?' ':'')+'Neues Abzeichen: '+nbd.map(function(b){return b.name;}).join(', ')+'.';state.bseen=(state.bseen||[]).concat(nbd.map(function(b){return b.id;}));save();}
-  const due=state.sets.reduce(function(a,s){return a+dueCount(s);},0);
-  const newN=state.sets.reduce(function(a,s){return a+newCount(s);},0);
+  const due=activeSets().reduce(function(a,s){return a+dueCount(s);},0);
+  const newN=activeSets().reduce(function(a,s){return a+newCount(s);},0);
   let first='';
   if(!state.name&&!state.nameSkipped){
     first='<div class="card stack"><div><label class="lab" for="nm">Wie heißt du?</label><input id="nm" class="input" autocomplete="given-name" maxlength="24"></div><button class="btn" data-a="savename">Los geht’s</button>'+(syncAvail()&&!syncOn()?'<button class="link" data-a="go" data-v="sync">Schon auf einem anderen Gerät gelernt? Verbinden</button>':'')+'</div>';
@@ -1099,9 +1125,47 @@ function home(){
   '</div>';
 }
 
-function vlangSets(){
+function vlangAll(){
   const l=state.vlang==='fr'?'fr':'en';
   return state.sets.filter(function(s){return (s.lang||'en')===l;});
+}
+function vlangSets(){return vlangAll().filter(function(s){return !s.hidden;});}
+const activeSets=function(){return state.sets.filter(function(s){return !s.hidden;});};
+/* Gruppen (Unit / Unité): aus dem Listennamen vor dem ersten ' · ' */
+function grpName(s){
+  const m=String(s.name).split(' · ');
+  if(m.length<2)return 'Eigene Listen';
+  const g=m[0].trim(),u=/^U(\d+)$/.exec(g);
+  return u?'Unit '+u[1]:g;
+}
+function grpsOf(list){
+  const order=[],map={};
+  list.forEach(function(x){const g=grpName(x);if(!map[g]){map[g]=[];order.push(g);}map[g].push(x);});
+  let rest=order.filter(function(g){return g!=='Eigene Listen';});
+  if(state.vsort!=='old')rest.reverse();
+  if(map['Eigene Listen'])rest.push('Eigene Listen');
+  return rest.map(function(g){return {g:g,sets:map[g]};});
+}
+function topicsView(){
+  const hid=state.sets.filter(function(x){return x.hidden;}).length;
+  let h=topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="settings">← Einstellungen</button><h1>Themen verwalten</h1></div>'+
+    '<p class="muted">Lege fest, was du gerade lernst. Ausgeblendete Listen und Themen bleiben mit allem Fortschritt gespeichert und kommen zurück, sobald du sie wieder einblendest.</p>'+
+    (ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
+    '<div class="chks"><label class="chk"><input type="checkbox" data-a="vsort"'+(state.vsort!=='old'?' checked':'')+'>Neueste Unit zuerst anzeigen</label></div>';
+  [['en','Englisch'],['fr','Französisch']].forEach(function(L){
+    const all=state.sets.filter(function(x){return (x.lang||'en')===L[0];});
+    if(!all.length)return;
+    h+='<div class="stack" style="gap:10px"><p class="lab" style="font-weight:700;font-size:17px">'+L[1]+'</p>';
+    grpsOf(all).forEach(function(G){
+      const on=G.sets.filter(function(x){return !x.hidden;}).length;
+      h+='<div class="card stack" style="gap:8px"><div class="row between"><h3>'+esc(G.g)+'</h3><button class="link" data-a="tglgrp" data-l="'+L[0]+'" data-g="'+esc(G.g)+'">'+(on===G.sets.length?'Alle ausblenden':'Alle einblenden')+'</button></div><p class="small muted">'+on+' von '+G.sets.length+' Listen eingeblendet</p><div class="chks">'+
+        G.sets.map(function(x){return '<label class="chk"><input type="checkbox" data-a="tglset" data-s="'+x.id+'"'+(x.hidden?'':' checked')+'><span style="flex:1;min-width:0">'+esc(x.name)+'</span><span class="small muted">'+x.cards.length+'</span></label>';}).join('')+'</div></div>';
+    });
+    h+='</div>';
+  });
+  h+='<div class="stack" style="gap:10px"><p class="lab" style="font-weight:700;font-size:17px">Mathe</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" data-a="tgltop" data-t="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div></div>'+
+    '</div>';
+  return h;
 }
 function vlangSeg(){
   const hasFr=state.sets.some(function(s){return s.lang==='fr';}),hasEn=state.sets.some(function(s){return (s.lang||'en')!=='fr';});
@@ -1109,16 +1173,30 @@ function vlangSeg(){
   const l=state.vlang==='fr'?'fr':'en';
   return '<div class="seg" role="group" aria-label="Sprache">'+[['en','Englisch'],['fr','Französisch']].map(function(x){return '<button data-a="vlang" data-l="'+x[0]+'" aria-pressed="'+(l===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>';
 }
+function setCardHtml(s){
+  return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+(newCount(s)?'<span class="badge">'+newCount(s)+' neu</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
+}
+function grpListHtml(list){
+  const gs=grpsOf(list);
+  if(gs.length<2&&list.length<=6)return '<div class="list">'+list.map(setCardHtml).join('')+'</div>';
+  ui.grp=ui.grp||{};
+  return '<div class="list">'+gs.map(function(G,i){
+    const key=(state.vlang==='fr'?'fr':'en')+':'+G.g,open=ui.grp[key]===undefined?(i===0||gs.length<=2):ui.grp[key];
+    const d=G.sets.reduce(function(a,x){return a+dueCount(x);},0),n=G.sets.reduce(function(a,x){return a+newCount(x);},0),w=G.sets.reduce(function(a,x){return a+x.cards.length;},0);
+    return '<div class="stack" style="gap:10px"><button class="setcard" style="gap:6px" data-a="vgrp" data-k="'+esc(key)+'" aria-expanded="'+open+'"><div class="row between"><h2>'+(open?'▾ ':'▸ ')+esc(G.g)+'</h2><span class="small muted">'+G.sets.length+' Listen</span></div><div class="row"><span class="badge">'+w+' Wörter</span>'+(n?'<span class="badge">'+n+' neu</span>':'')+'<span class="small muted">'+d+' fällig</span></div></button>'+
+      (open?G.sets.map(setCardHtml).join(''):'')+'</div>';
+  }).join('')+'</div>';
+}
 function vocabList(){
   const mine=vlangSets();
   const due=mine.reduce(function(a,s){return a+dueCount(s);},0);
   const newN=mine.reduce(function(a,s){return a+newCount(s);},0);
   return topBar()+'<div class="stack"><h1>Vokabeln</h1>'+vlangSeg()+
     (!state.sets.length?'<div class="card stack"><h3>Noch keine Liste</h3><p class="muted">Lege eine Liste an und trage die W\u00F6rter aus dem Buch ein. Eine Zeile pro Wort, zum Beispiel: to borrow = ausleihen</p></div>':(due?'<button class="btn block" data-a="vstart" data-s="all">Alle fälligen Karten wiederholen ('+due+')</button>':'')+(newN?'<button class="btn'+(due?' ghost':'')+' block" data-a="vstart" data-s="all" data-n="1">Neue Wörter lernen ('+Math.min(NEWMAX,newN)+' von '+newN+')</button>':'')+(!due&&!newN?'<div class="fb info">Alles wiederholt. Komm morgen wieder oder übe eine Liste trotzdem.</div>':''))+
-    extraVocabHtml()+'<div class="list">'+mine.map(function(s){
-      return '<button class="setcard" data-a="vset" data-s="'+s.id+'"><div class="row between"><h2>'+esc(s.name)+'</h2></div><div class="row"><span class="badge">'+langName(s.lang)+'</span><span class="badge">'+s.cards.length+' Wörter</span>'+(s.builtin?'<span class="badge">Beispielliste</span>':'')+(newCount(s)?'<span class="badge">'+newCount(s)+' neu</span>':'')+'<span class="small muted">'+dueCount(s)+' fällig</span></div>'+boxesHtml(s)+'</button>';
-    }).join('')+'</div>'+
-    '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+vocabTips()+
+    extraVocabHtml()+grpListHtml(mine)+
+    (vlangAll().length>mine.length?'<p class="small muted">'+(vlangAll().length-mine.length)+' Listen sind ausgeblendet. <button class="link" data-a="go" data-v="topics">Themen verwalten</button></p>':'')+
+    '<button class="btn ghost block" data-a="vnew">Neue Liste anlegen</button>'+
+    (state.sets.length>4?'<button class="btn ghost block" data-a="go" data-v="topics">Themen verwalten</button>':'')+vocabTips()+
   '</div>';
 }
 
@@ -1193,7 +1271,8 @@ function vocabSession(){
     '<div class="stack" style="gap:10px"><input id="ans" class="input" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Deine Antwort" value="'+esc(vs.keep||'')+'">'+
     (cur.side==='fr'?keysRow(['é','è','ê','à','â','ç','ô','î','û','ë','ï','ù','œ',"'"]):'')+
     (vs.msg?'<div class="fb info">'+esc(vs.msg)+'</div>':'')+'</div>'+
-    '<div class="row"><button class="btn" style="flex:1" data-a="vcheck">Prüfen</button><button class="btn ghost" data-a="vhint">Hinweis</button><button class="btn ghost" data-a="vskip">Weiß nicht</button></div></div>';
+    '<div class="row"><button class="btn" style="flex:1" data-a="vcheck">Prüfen</button><button class="btn ghost" data-a="vhint">Hinweis</button><button class="btn ghost" data-a="vskip">Weiß nicht</button></div>'+
+    (cur.type==='listen'?'<button class="link" data-a="vnosound">Kein Ton? Andere Aufgabe</button>':'')+'</div>';
 }
 
 function vocabResult(){
@@ -1238,7 +1317,7 @@ function settings(){
   return topBar()+'<div class="stack"><div><button class="link" data-a="go" data-v="home">← Start</button><h1>Einstellungen</h1></div>'+
     '<div><label class="lab" for="sname">Name</label><input id="sname" class="input" maxlength="24" value="'+esc(state.name)+'"></div>'+
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
-    '<div><p class="lab" style="margin-bottom:6px">Mathe-Themen, die angezeigt werden</p><div class="chks">'+TOPICS.map(function(t){return '<label class="chk"><input type="checkbox" class="settop" value="'+t.id+'"'+(state.hiddenTopics.indexOf(t.id)<0?' checked':'')+'>'+t.name+'</label>';}).join('')+'</div><p class="small muted" style="margin-top:6px">Ausgeblendete Themen bleiben gespeichert und kommen zur\u00FCck, wenn du sie wieder ausw\u00E4hlst.</p></div>'+(ui.setErr?'<p class="err">'+esc(ui.setErr)+'</p>':'')+
+    '<div><p class="lab" style="margin-bottom:6px">Themen</p><button class="btn ghost block" data-a="go" data-v="topics">Themen verwalten</button><p class="small muted" style="margin-top:6px">'+visibleTopics().length+' von '+TOPICS.length+' Mathe-Themen und '+activeSets().length+' von '+state.sets.length+' Vokabellisten sind eingeblendet. Hier kannst du Listen nach Unit ein- und ausblenden und die Reihenfolge ändern.</p></div>'+
     '<div><p class="lab" style="margin-bottom:6px">Beim Vokabellernen</p><div class="chks"><label class="chk"><input type="checkbox" id="smn"'+(state.mnOn?' checked':'')+'>Eselsbrücken anzeigen</label><label class="chk"><input type="checkbox" id="svar"'+(state.varied!==false?' checked':'')+'>Abwechslung bei den Aufgaben (Auswahl, Lückensatz, Hören)</label></div><p class="small muted" style="margin-top:6px">Eselsbrücken helfen am meisten, wenn du erst selbst überlegst. Sie erscheinen beim ersten Kennenlernen und nach einer falschen Antwort.</p></div>'+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
     '<button class="btn ghost block" data-a="go" data-v="week">Wochenblick für Eltern</button>'+
@@ -1562,6 +1641,7 @@ function render(){
   else if(view==='math')html=mathList();
   else if(view==='msess')html=mathSession();
   else if(view==='settings')html=settings();
+  else if(view==='topics')html=topicsView();
   else if(view==='backup')html=backupView();
   else if(view==='sync')html=syncView();
   else if(view==='exams')html=examsView();
@@ -1573,7 +1653,7 @@ function render(){
   else if(view==='tres')html=testResult();
   root.innerHTML=html;
   navEl.hidden=inSession;
-  const tab=(view==='home'||view==='settings'||view==='exams'||view==='backup'||view==='sync'||view==='badges'||view==='week')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
+  const tab=(view==='home'||view==='settings'||view==='topics'||view==='exams'||view==='backup'||view==='sync'||view==='badges'||view==='week')?'home':(view==='math'||view==='msess'||view==='explain')?'math':'vocab';
   navEl.innerHTML='<div class="in">'+[['home','Start'],['vocab','Vokabeln'],['math','Mathe']].map(function(x){return '<button data-a="go" data-v="'+x[0]+'"'+(tab===x[0]?' aria-current="page"':'')+'>'+x[1]+'</button>';}).join('')+'</div>';
   const inp=$('ans');
   if(inp&&ui.focus){inp.focus();const l=inp.value.length;try{inp.setSelectionRange(l,l);}catch(e){}}
@@ -1680,6 +1760,13 @@ function vCheck(){
   const vs=ui.vs,cur=vs.cur,val=$('ans').value;
   const res=checkVocab(val,cur.answer,cur.side);
   if(res.r==='empty'){vs.msg='Schreibe erst etwas hin.';vs.keep='';ui.focus=true;render();return;}
+  if(res.r!=='ok'&&cur.type==='gap'&&!vs.retried&&checkVocab(val,cur.card.fx,cur.side).r==='ok'){
+    vs.retried=true;vs.msg='Fast richtig. Das Wort stimmt, es muss aber noch zum Satz passen (Zeitform, Mehrzahl oder Endung).';vs.keep=val;ui.focus=true;render();return;
+  }
+  if(res.r!=='ok'&&cur.type==='type'&&!cur.toDe){
+    const tw=sameDe(cur.card,cur.set).find(function(c){return checkVocab(val,c.fx,cur.set.lang).r==='ok';});
+    if(tw){vFinish(true,'Richtig! Hier passt auch '+tw.fx+'.');return;}
+  }
   if(res.r==='almost'&&!vs.retried){vs.retried=true;vs.msg=res.msg+' Versuch es noch einmal.';vs.keep=val;ui.focus=true;render();return;}
   if(res.r==='ok'){vFinish(true,vs.retried?'Richtig, beim zweiten Versuch!':'Richtig!');return;}
   vFinish(false);
@@ -1768,6 +1855,11 @@ document.addEventListener('click',function(ev){
     case 'key':insertAtCaret(t.dataset.c);break;
     case 'savename':{const v=($('nm').value||'').trim();if(v)state.name=v;else state.nameSkipped=true;save();render();break;}
     case 'vset':ui.sid=t.dataset.s;go('vset');break;
+    case 'vgrp':{ui.grp=ui.grp||{};const k=t.dataset.k,cur=t.getAttribute('aria-expanded')==='true';ui.grp[k]=!cur;render();break;}
+    case 'vsort':state.vsort=t.checked?'new':'old';save();render();break;
+    case 'tglset':{const x=getSet(t.dataset.s);if(x){x.hidden=!t.checked;if(!x.hidden)delete x.hidden;save();}ui.setErr='';render();break;}
+    case 'tglgrp':{const L=t.dataset.l,g=t.dataset.g,mine=state.sets.filter(function(x){return (x.lang||'en')===L&&grpName(x)===g;});const allOn=mine.every(function(x){return !x.hidden;});mine.forEach(function(x){if(allOn)x.hidden=true;else delete x.hidden;});save();ui.setErr='';render();break;}
+    case 'tgltop':{const id=t.dataset.t,i=state.hiddenTopics.indexOf(id);if(t.checked){if(i>=0)state.hiddenTopics.splice(i,1);ui.setErr='';}else{if(visibleTopics().length<=1){ui.setErr='Mindestens ein Mathe-Thema muss eingeblendet bleiben.';render();break;}if(i<0)state.hiddenTopics.push(id);ui.setErr='';}save();render();break;}
     case 'vlang':state.vlang=t.dataset.l==='fr'?'fr':'en';save();render();break;
     case 'vdir':state.vdir=t.dataset.d;save();render();break;
     case 'vstart':startVocab(t.dataset.s,!!t.dataset.f,!!t.dataset.n);break;
@@ -1796,6 +1888,7 @@ document.addEventListener('click',function(ev){
     case 'vcheck':vCheck();break;
     case 'vhint':{const vs=ui.vs;const alt=String(vs.cur.answer).split(/[\/;]/)[0].trim();vs.hint=alt.slice(0,1)+' …';vs.hinted=true;vs.keep=$('ans').value;ui.focus=true;render();break;}
     case 'vskip':vFinish(false);break;
+    case 'vnosound':{const vs=ui.vs;if(!vs||vs.phase!=='ask'||!vs.cur||vs.cur.type!=='listen')break;vs.noListen=true;prepVocab();ui.focus=true;render();break;}
     case 'vpick':{const vs=ui.vs;if(!vs||vs.phase!=='ask'||!vs.cur||vs.cur.type!=='mc')break;const o=vs.cur.opts[parseInt(t.dataset.i,10)];if(!o)break;vFinish(o.ok,'Richtig!');break;}
     case 'myedit':{const f=findCard(t.dataset.c);if(!f)break;ui.my={cid:f.c.id,txt:f.c.my||''};render();break;}
     case 'mysave':{const f=findCard(t.dataset.c),ta=$('myin');if(f&&ta){const v=ta.value.trim().slice(0,160);if(v)f.c.my=v;else delete f.c.my;save();}ui.my=null;render();break;}
@@ -1857,9 +1950,7 @@ document.addEventListener('click',function(ev){
     case 'exdelno':readEx();ui.delEx=null;render();break;
     case 'exdelyes':state.exams=state.exams.filter(e=>e.id!==t.dataset.e);ui.delEx=null;save();render();break;
     case 'ssave':{
-      const sel=Array.prototype.map.call(document.querySelectorAll('.settop:checked'),function(i){return i.value;});
-      if(!sel.length){ui.setErr='Mindestens ein Mathe-Thema muss sichtbar bleiben.';render();break;}
-      ui.setErr='';state.hiddenTopics=TOPICS.map(function(t){return t.id;}).filter(function(id){return sel.indexOf(id)<0;});
+      ui.setErr='';
       const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;state.mnOn=!!$('smn').checked;state.varied=!!$('svar').checked;save();go('home');break;}
     case 'bkmake':{bkRead();ui.bk.code=makeCode();ui.bk.msg='';state.lastBackup=dkey();save();render();break;}
     case 'bkcopy':{
@@ -1938,6 +2029,7 @@ document.addEventListener('visibilitychange',function(){
 window.addEventListener('online',function(){if(syncOn())syncPull().then(function(ch){if(ch)render();});});
 render();
 syncPull().then(function(ch){if(ch)render();});
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 })();
 </script>
 

@@ -641,7 +641,7 @@ function buildPreset(p,pc){
 const B64=function(x){return btoa(unescape(encodeURIComponent(x)));};
 const UN64=function(x){return decodeURIComponent(escape(atob(x)));};
 function makeCode(){
-  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,mnOn:!!state.mnOn,varied:state.varied!==false,bseen:state.bseen||[],tbest:state.tbest||0,tlog:state.tlog,vsort:state.vsort||'new',hs:state.sets.filter(function(x){return x.preset&&x.hidden;}).map(function(x){return x.id;})||[],ps:[],pc:{},us:[]};
+  const o={v:1,name:state.name,goal:state.goal,points:state.points,days:state.days,vdir:state.vdir,math:state.math,exams:state.exams,hiddenTopics:state.hiddenTopics,presetSeen:state.presetSeen,nameSkipped:!!state.nameSkipped,mnOn:!!state.mnOn,varied:state.varied!==false,bseen:state.bseen||[],tbest:state.tbest||0,tlog:state.tlog,vsort:state.vsort||'new',srate:state.srate||'slow',hs:state.sets.filter(function(x){return x.preset&&x.hidden;}).map(function(x){return x.id;})||[],ps:[],pc:{},us:[]};
   state.sets.forEach(function(s){
     const pd=s.preset&&PRESETS.find(function(p){return p.id===s.id;});
     const same=pd&&pd.cards.length===s.cards.length&&s.cards.every(function(c,i){return c.id===s.id+'-'+i&&c.fx===pd.cards[i][0]&&c.de===pd.cards[i][1];});
@@ -663,7 +663,7 @@ function parseCode(txt){
 }
 function stateFromCode(o){
   const st=defaultState();
-  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped','mnOn','varied','bseen','tbest','tlog','vsort'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
+  ['name','goal','points','days','vdir','math','exams','hiddenTopics','nameSkipped','mnOn','varied','bseen','tbest','tlog','vsort','srate'].forEach(function(k){if(o[k]!==undefined)st[k]=o[k];});
   st.presetSeen=Array.isArray(o.presetSeen)?o.presetSeen:[];
   st.sets=[];
   (o.ps||[]).forEach(function(id){const p=PRESETS.find(function(x){return x.id===id;});if(p){const b=buildPreset(p,o.pc||{});if((o.hs||[]).indexOf(id)>=0)b.hidden=true;st.sets.push(b);}});
@@ -865,17 +865,49 @@ const hl=function(x){return esc(x).replace(/\*(.+?)\*/g,'<b>$1</b>');};
 function findCard(cid){for(let i=0;i<state.sets.length;i++){const c=state.sets[i].cards.find(function(x){return x.id===cid;});if(c)return {s:state.sets[i],c:c};}return null;}
 function mkCard(c){const o={id:uid(),fx:c.fx,de:c.de,box:1,due:0,u:1};['ipa','ex','nt'].forEach(function(k){if(c[k])o[k]=c[k];});return o;}
 function canSpeak(){try{return typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance==='function';}catch(e){return false;}}
-function speak(text,lang,rate){
+const RATES={norm:0.9,slow:0.72,vslow:0.55};
+function voiceStore(){try{return JSON.parse(localStorage.getItem('lernheft_voice')||'{}')||{};}catch(e){return {};}}
+function voiceSave(k,n){try{const o=voiceStore();if(n)o[k]=n;else delete o[k];localStorage.setItem('lernheft_voice',JSON.stringify(o));}catch(e){}}
+function voicesFor(short){
+  let vs=[];try{vs=window.speechSynthesis.getVoices()||[];}catch(e){}
+  return vs.filter(function(v){return v.lang&&v.lang.toLowerCase().replace('_','-').indexOf(short)===0;});
+}
+function voiceScore(v,tag){
+  const n=(v.name||'').toLowerCase(),l=(v.lang||'').toLowerCase().replace('_','-');let sc=0;
+  if(l===tag)sc+=50;
+  if(/premium|enhanced|erweitert|verbessert|neural|natural|siri/.test(n))sc+=40;
+  if(/compact|kompakt|espeak|robot/.test(n))sc-=40;
+  if(/google/.test(n))sc+=8;
+  if(v.localService)sc+=5;
+  return sc;
+}
+function pickVoice(lang){
+  const short=lang.slice(0,2).toLowerCase(),tag=lang.toLowerCase(),list=voicesFor(short);
+  if(!list.length)return null;
+  const pref=voiceStore()[short];
+  if(pref){const f=list.find(function(v){return v.name===pref;});if(f)return f;}
+  return list.map(function(v){return {v:v,s:voiceScore(v,tag)};}).sort(function(x,y){return y.s-x.s;})[0].v;
+}
+/* kind: 'w' Wort, 's' Satz, 'slow' Wort noch langsamer */
+function speakRate(kind){
+  const b=RATES[state.srate]||RATES.slow;
+  return kind==='slow'?Math.max(0.4,b*0.7):kind==='s'?Math.min(1,b+0.05):b;
+}
+function speak(text,lang,kind){
   if(!canSpeak()||!text)return;
   try{
     const syn=window.speechSynthesis;syn.cancel();
-    const u=new window.SpeechSynthesisUtterance(text);u.lang=lang;u.rate=rate||0.9;
-    const vs=syn.getVoices()||[],l=lang.toLowerCase();
-    let v=vs.filter(function(x){return x.lang&&x.lang.toLowerCase().replace('_','-')===l;});
-    if(!v.length)v=vs.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf(l.slice(0,2))===0;});
-    if(v.length)u.voice=v[0];
+    const u=new window.SpeechSynthesisUtterance(text);u.lang=lang;u.rate=speakRate(kind);
+    const v=pickVoice(lang);if(v)u.voice=v;
     syn.speak(u);
   }catch(e){}
+}
+function slowLink(cid){
+  return canSpeak()?'<button type="button" class="link" data-a="say" data-c="'+cid+'" data-w="slow">Langsamer anhören</button>':'';
+}
+function voiceOptions(short){
+  const list=voicesFor(short),pref=voiceStore()[short];
+  return '<option value="">Automatisch (beste verfügbare)</option>'+list.map(function(v){return '<option value="'+esc(v.name)+'"'+(pref===v.name?' selected':'')+'>'+esc(v.name)+' ('+esc(v.lang)+')</option>';}).join('');
 }
 function spokenWord(c){return String(c.fx).split(/\s*\/\s*/)[0].replace(/\(.*?\)/g,' ').replace(/\.\.\./g,' ').replace(/\s+/g,' ').trim();}
 function sayBtn(cid,w,label){
@@ -889,7 +921,7 @@ function extrasHtml(c){
   return h;
 }
 function cardFace(c,set,big,showMn){
-  return '<div class="card stack" style="gap:12px"><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div class="'+(big?'big':'wd')+'">'+esc(c.fx)+'</div>'+(c.ipa?'<div class="ipa">['+esc(c.ipa)+']</div>':'')+'</div>'+sayBtn(c.id,'w','Wort anhören')+'</div>'+
+  return '<div class="card stack" style="gap:12px"><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div style="min-width:0"><div class="'+(big?'big':'wd')+'">'+esc(c.fx)+'</div>'+(c.ipa?'<div class="ipa">['+esc(c.ipa)+']</div>':'')+slowLink(c.id)+'</div>'+sayBtn(c.id,'w','Wort anhören')+'</div>'+
     '<div class="tr">'+esc(deShow(c.de))+'</div>'+extrasHtml(c)+(showMn?mnHtml(c):'')+'</div>';
 }
 
@@ -1263,7 +1295,7 @@ function vocabSession(){
   if(cur.type==='gap'){
     top='<div class="card stack"><div class="eyebrow">Lückensatz</div><div style="font-size:22px;line-height:1.4;font-weight:600">'+esc(cur.prompt)+'</div><p class="muted">Gesucht: '+esc(cur.gapHint)+'</p>'+hintLine+'</div>';
   }else if(cur.type==='listen'){
-    top='<div class="card stack"><div class="eyebrow">Hören</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:center"><div class="big" style="min-width:0">Hör zu und schreib das Wort auf</div>'+sayBtn(cur.card.id,'w','Wort anhören')+'</div>'+hintLine+'</div>';
+    top='<div class="card stack"><div class="eyebrow">Hören</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:center"><div class="big" style="min-width:0">Hör zu und schreib das Wort auf</div>'+sayBtn(cur.card.id,'w','Wort anhören')+'</div>'+slowLink(cur.card.id)+hintLine+'</div>';
   }else{
     top='<div class="card stack"><div class="eyebrow">'+esc(cur.dirLabel)+'</div><div class="row" style="flex-wrap:nowrap;justify-content:space-between;align-items:flex-start"><div class="big" style="min-width:0">'+esc(cur.prompt)+'</div>'+(cur.toDe?sayBtn(cur.card.id,'w','Wort anhören'):'')+'</div>'+(cur.toDe&&cur.card.ipa?'<div class="ipa">['+esc(cur.card.ipa)+']</div>':'')+hintLine+'</div>';
   }
@@ -1318,6 +1350,12 @@ function settings(){
     '<div><label class="lab" for="sname">Name</label><input id="sname" class="input" maxlength="24" value="'+esc(state.name)+'"></div>'+
     '<div><label class="lab" for="sgoal">Tagesziel (richtige Antworten)</label><select id="sgoal" class="select">'+[5,10,15,20,30].map(function(n){return '<option value="'+n+'"'+(state.goal===n?' selected':'')+'>'+n+'</option>';}).join('')+'</select></div>'+
     '<div><p class="lab" style="margin-bottom:6px">Themen</p><button class="btn ghost block" data-a="go" data-v="topics">Themen verwalten</button><p class="small muted" style="margin-top:6px">'+visibleTopics().length+' von '+TOPICS.length+' Mathe-Themen und '+activeSets().length+' von '+state.sets.length+' Vokabellisten sind eingeblendet. Hier kannst du Listen nach Unit ein- und ausblenden und die Reihenfolge ändern.</p></div>'+
+    (canSpeak()?'<div class="stack" style="gap:10px"><p class="lab" style="margin-bottom:0">Aussprache</p>'+
+      '<div><label class="lab" for="srate">Sprechtempo</label><select id="srate" class="select">'+[['norm','Normal'],['slow','Langsam'],['vslow','Sehr langsam']].map(function(x){return '<option value="'+x[0]+'"'+((state.srate||'slow')===x[0]?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div>'+
+      '<div><label class="lab" for="vfr">Stimme Französisch</label><select id="vfr" class="select">'+voiceOptions('fr')+'</select></div>'+
+      '<div><label class="lab" for="ven">Stimme Englisch</label><select id="ven" class="select">'+voiceOptions('en')+'</select></div>'+
+      '<div class="row"><button class="btn ghost small" data-a="vtest" data-l="fr">Französisch anhören</button><button class="btn ghost small" data-a="vtest" data-l="en">Englisch anhören</button></div>'+
+      '<p class="small muted">Klingt eine Stimme undeutlich, probiere eine andere aus. Auf dem iPad werden die Stimmen deutlich besser, wenn du eine erweiterte lädst: Einstellungen, Bedienungshilfen, Gesprochene Inhalte, Stimmen, dann Französisch und eine Stimme mit „Erweitert“ oder „Verbessert“ laden. Danach erscheint sie hier in der Liste. Die Wahl gilt nur für dieses Gerät.</p></div>':'')+
     '<div><p class="lab" style="margin-bottom:6px">Beim Vokabellernen</p><div class="chks"><label class="chk"><input type="checkbox" id="smn"'+(state.mnOn?' checked':'')+'>Eselsbrücken anzeigen</label><label class="chk"><input type="checkbox" id="svar"'+(state.varied!==false?' checked':'')+'>Abwechslung bei den Aufgaben (Auswahl, Lückensatz, Hören)</label></div><p class="small muted" style="margin-top:6px">Eselsbrücken helfen am meisten, wenn du erst selbst überlegst. Sie erscheinen beim ersten Kennenlernen und nach einer falschen Antwort.</p></div>'+
     '<button class="btn block" data-a="ssave">Speichern</button>'+
     '<button class="btn ghost block" data-a="go" data-v="week">Wochenblick für Eltern</button>'+
@@ -1660,7 +1698,7 @@ function render(){
   const nb=$('nextbtn');if(nb&&ui.focus)nb.focus();
   ui.focus=false;
   if(view==='vsess'&&ui.vs&&ui.vs.speakPending&&ui.vs.phase==='ask'&&ui.vs.cur&&ui.vs.cur.type==='listen'){
-    ui.vs.speakPending=false;speak(spokenWord(ui.vs.cur.card),ui.vs.cur.set.lang==='fr'?'fr-FR':'en-GB',0.8);
+    ui.vs.speakPending=false;speak(spokenWord(ui.vs.cur.card),ui.vs.cur.set.lang==='fr'?'fr-FR':'en-GB','w');
   }
 }
 function go(v){
@@ -1855,6 +1893,12 @@ document.addEventListener('click',function(ev){
     case 'key':insertAtCaret(t.dataset.c);break;
     case 'savename':{const v=($('nm').value||'').trim();if(v)state.name=v;else state.nameSkipped=true;save();render();break;}
     case 'vset':ui.sid=t.dataset.s;go('vset');break;
+    case 'vtest':{
+      const L=t.dataset.l;state.srate=($('srate')||{value:state.srate}).value||'slow';
+      voiceSave('fr',($('vfr')||{value:''}).value);voiceSave('en',($('ven')||{value:''}).value);save();
+      if(L==='fr')speak('Bonjour, je m\u2019appelle L\u00E9a. J\u2019aime le sport et la musique.','fr-FR','s');
+      else speak('Hello, my name is Lea. I like sport and music.','en-GB','s');
+      break;}
     case 'vgrp':{ui.grp=ui.grp||{};const k=t.dataset.k,cur=t.getAttribute('aria-expanded')==='true';ui.grp[k]=!cur;render();break;}
     case 'vsort':state.vsort=t.checked?'new':'old';save();render();break;
     case 'tglset':{const x=getSet(t.dataset.s);if(x){x.hidden=!t.checked;if(!x.hidden)delete x.hidden;save();}ui.setErr='';render();break;}
@@ -1914,8 +1958,8 @@ document.addEventListener('click',function(ev){
     case 'vintroback':{const vs=ui.vs;ui.my=null;if(vs.ii>0){vs.ii--;window.scrollTo(0,0);render();}break;}
     case 'say':{
       const f=findCard(t.dataset.c);if(!f)break;
-      if(t.dataset.w==='s')speak(String(f.c.ex||'').replace(/\*/g,''),f.s.lang==='fr'?'fr-FR':'en-GB',0.85);
-      else speak(spokenWord(f.c),f.s.lang==='fr'?'fr-FR':'en-GB',0.8);
+      if(t.dataset.w==='s')speak(String(f.c.ex||'').replace(/\*/g,''),f.s.lang==='fr'?'fr-FR':'en-GB','s');
+      else speak(spokenWord(f.c),f.s.lang==='fr'?'fr-FR':'en-GB',t.dataset.w==='slow'?'slow':'w');
       break;}
     case 'vend':go(ui.vs&&ui.vs.examId?'home':'vocab');break;
     case 'mstart':startMath(t.dataset.t);break;
@@ -1951,7 +1995,7 @@ document.addEventListener('click',function(ev){
     case 'exdelyes':state.exams=state.exams.filter(e=>e.id!==t.dataset.e);ui.delEx=null;save();render();break;
     case 'ssave':{
       ui.setErr='';
-      const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;state.mnOn=!!$('smn').checked;state.varied=!!$('svar').checked;save();go('home');break;}
+      const v=($('sname').value||'').trim();state.name=v;state.goal=parseInt($('sgoal').value,10)||10;state.srate=($('srate')||{value:state.srate||'slow'}).value||'slow';if($('vfr'))voiceSave('fr',$('vfr').value);if($('ven'))voiceSave('en',$('ven').value);state.mnOn=!!$('smn').checked;state.varied=!!$('svar').checked;save();go('home');break;}
     case 'bkmake':{bkRead();ui.bk.code=makeCode();ui.bk.msg='';state.lastBackup=dkey();save();render();break;}
     case 'bkcopy':{
       bkRead();
@@ -2030,6 +2074,7 @@ window.addEventListener('online',function(){if(syncOn())syncPull().then(function
 render();
 syncPull().then(function(ch){if(ch)render();});
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+try{if(canSpeak()){window.speechSynthesis.onvoiceschanged=function(){const f=$('vfr'),e=$('ven');if(f)f.innerHTML=voiceOptions('fr');if(e)e.innerHTML=voiceOptions('en');};}}catch(e){}
 })();
 </script>
 
